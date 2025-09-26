@@ -1,4 +1,7 @@
 import PlusIcon from "./plus.svg";
+import FilterIcon from "./FilterIcon";
+import FilterIcon2 from "./filter.svg";
+import SearchIcon from "./SearchIcon";
 import CloseIcon from "./close.svg";
 import BoxIcon from "./box.svg";
 import CheckCircleIcon from "./check-circle.svg";
@@ -51,6 +54,7 @@ import HorizontaLDots from "./horizontal-dots.svg";
 import ChatIcon from "./chat.svg";
 import MoreDotIcon from "./more-dot.svg";
 import BellIcon from "./bell.svg";
+import EditIcon from "./EditIcon";
 
 export {
   DownloadIcon,
@@ -106,4 +110,9 @@ export {
   HorizontaLDots,
   ChevronUpIcon,
   ChatIcon,
+  FilterIcon,
+  FilterIcon2,
+  SearchIcon,
+  EditIcon
+
 };

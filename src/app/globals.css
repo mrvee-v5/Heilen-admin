@@ -746,7 +746,7 @@ span.flatpickr-weekday,
 :root {
   --app-bg: #FAF2E5;
   --app-base-color: #54392A;
-  --app-btn-color:#C06A4D
+  --app-btn-color:#C06A4D;
 }
 
 .menu-item-active {
