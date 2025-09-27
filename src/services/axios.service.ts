@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 const prod = "https://api.heilen.io";
 const dev = "https://dev.heilen.io"
 // The API base URL. Replace with your actual base URL or environment variable.
-const API_BASE_URL = prod; // Example
+const API_BASE_URL = dev; // Example
 
 
 // A list of URLs that do not require an authorization token.
@@ -12,16 +12,16 @@ const authNotRequiredURLs: string[] = [
     '/user/send-verification-code',
     '/user/verify/token',
     '/user/user/register',
-    '/user/login',
-    "/admin/users"
+    '/user/login'
     // Add other public endpoints here
 ];
 
 const getAccessToken = async (): Promise<string | null> => {
-    // This is a placeholder. In a web application, you would typically get the token from a local storage mechanism like localStorage or a cookie.
-    // Example: return localStorage.getItem('accessToken');
+    if (typeof window !== "undefined") {
+        return localStorage.getItem("accessToken");
+    }
     return null;
-};
+}
 
 const getExcludedURLs = (config: AxiosRequestConfig): boolean => {
     return (
@@ -46,6 +46,7 @@ axiosExtended.interceptors.request.use(async (config:any) => {
     }
 
     const accessToken = await getAccessToken();
+    console.log("Access token:", accessToken);
     if (accessToken) {
         config.headers['Authorization'] = `Bearer ${accessToken}`;
     }

@@ -1,7 +1,27 @@
 // src/services/users.service.ts
+import axios from 'axios';
 import axiosExtended from './axios.service';
 import { RegisterUserPayload, UserDetail, UsersApiResponse } from './types';
 const API_URL = '/admin/users';
+
+
+export async function adminLogin(data: { email: string; password: string; deviceToken: string }) {
+  try {
+    const res = await axiosExtended.post(`/admin/login`, data);
+
+    const { token} = res.data;
+     axios.defaults.headers.common['authorization'] = `Bearer ${token}`
+    if (typeof window !== 'undefined' && token) {
+      localStorage.setItem('accessToken', token);
+
+    }
+
+    return res.data;
+  } catch (error: any) {
+    console.error("Admin login failed:", error.response?.data || error.message);
+    throw error;
+  }
+}
 
 
 
@@ -98,3 +118,4 @@ export const updateUserSubscription = async (
     throw error;
   }
 };
+
