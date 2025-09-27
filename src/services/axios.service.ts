@@ -3,7 +3,7 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 const prod = "https://api.heilen.io";
 const dev = "https://dev.heilen.io"
 // The API base URL. Replace with your actual base URL or environment variable.
-const API_BASE_URL = dev; // Example
+const API_BASE_URL = prod; // Example
 
 
 // A list of URLs that do not require an authorization token.
