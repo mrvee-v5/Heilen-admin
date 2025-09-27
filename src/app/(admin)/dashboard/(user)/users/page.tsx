@@ -289,7 +289,7 @@ export default function UsersTable() {
                                                                         className="w-full h-full object-cover"
                                                                         width={40}
                                                                         height={40}
-                                                                        src={user.image}
+                                                                        src={user.image || "/images/placeholder.jpg"}
                                                                         alt={user.name}
                                                                     />
                                                                 </div>

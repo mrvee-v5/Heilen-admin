@@ -45,8 +45,9 @@ export default function BasicTables() {
     return (
         <div>
             <ComponentCard title="">
-                <UserMetaCard user={user} />
-                <BusinessInfoCard user={user} />
+                {user && <UserInfoCard user={user} />}
+                {user && user.business && <BusinessInfoCard user={user} />}
+
             </ComponentCard>
         </div>
     );
