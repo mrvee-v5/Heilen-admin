@@ -42,6 +42,18 @@ export default function UsersTable() {
     const [searchInput, setSearchInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
 
+    // ✅ NEW STATES
+    const [showCreateUserModal, setShowCreateUserModal] = useState(false);
+    const [creatingUser, setCreatingUser] = useState(false);
+    const [newUser, setNewUser] = useState({
+        firstName: "",
+        lastName: "",
+        email: "",
+        phoneNumber: "",
+        password: "",
+        profileImg: "https://avatar.iran.liara.run/public/25",
+    });
+
     const itemsPerPage = 10;
 
     useEffect(() => {
@@ -143,13 +155,13 @@ export default function UsersTable() {
 
                         try {
                             // Step 1: Send verification code
-                            await sendVerificationCode({ email, mode: "register" });
+                            // await sendVerificationCode({ email, mode: "register" });
 
                             // Step 2: Get OTP from admin endpoint
-                            const otpResponse = await getUsersOtp(email);
-                            const token = otpResponse.otp;
+                            // const otpResponse = await getUsersOtp(email);
+                            // const token = otpResponse.otp;
                             // Step 3: Verify the token
-                            await verifyToken({ email, token });
+                            // await verifyToken({ email, token });
 
 
                             // Step 4: Register the user
@@ -159,13 +171,9 @@ export default function UsersTable() {
                                 firstName: String(row["First Name"] || ""),
                                 lastName: String(row["Last Name"] || ""),
                                 password: String(row.Password || "123456"),
-                                isThirdParty: row.isThirdParty === true,
-                                //@ts-ignore
-                                location: {},
-                                dob: "2002-09-18T12:57:04.000Z",
-                                deviceToken: String(row.deviceToken || ""),
-                                inviteCode: String(row.InviteCode || ""),
-                                profileImgURL: String(row["Image link"] || ""),
+                                role: "user",
+                                countryCode: "NL",
+                                profileImg: String(row["Image link"] || ""),
                             });
 
                             return { status: 'success', email: email };
@@ -241,16 +249,13 @@ export default function UsersTable() {
                             </button>
                         </div>
                         <div className="flex items-center gap-3">
-                            <button
-                                onClick={() => setShowUploadModal(true)}
-                                className="bg-[#C06A4D] text-white px-4 py-2 rounded hover:bg-[#a6533c]"
-                            >
+                            <button onClick={() => setShowUploadModal(true)} className="bg-[#C06A4D] text-white px-4 py-2 rounded hover:bg-[#a6533c]">
                                 Import Users
                             </button>
-                            {/* <button className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200">
-                                <FilterIcon />
-                                Filter
-                            </button> */}
+                            {/* ✅ NEW BUTTON */}
+                            <button onClick={() => setShowCreateUserModal(true)} className="bg-[#54392A] text-white px-4 py-2 rounded hover:bg-[#3e2a1f]">
+                                Create User
+                            </button>
                         </div>
                     </div>
                     {loading ? (
@@ -404,6 +409,72 @@ export default function UsersTable() {
                                     visible={true}
                                 />
                                     : "Extract Data"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </Modal>
+
+
+
+            {/* ✅ NEW Create User Modal */}
+            <Modal showCloseButton={false} isOpen={showCreateUserModal} onClose={() => setShowCreateUserModal(false)} className="max-w-[700px] m-4">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                    <div className="bg-white w-full max-w-lg rounded-lg shadow-lg overflow-hidden">
+                        <div className="flex justify-between items-center bg-[#54392A] text-white px-5 py-3">
+                            <h2 className="text-lg font-semibold">Create New User</h2>
+                            <button onClick={() => setShowCreateUserModal(false)} className="text-white text-xl hover:text-gray-300">✕</button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            {["firstName", "lastName", "email", "phoneNumber", "password", "profileImg"].map((f) => (
+                                <div key={f}>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">{f}</label>
+                                    <input
+                                        type={f === "password" ? "password" : "text"}
+                                        value={newUser[f as keyof typeof newUser]}
+                                        onChange={(e) => setNewUser({ ...newUser, [f]: e.target.value })}
+                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#C06A4D]"
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <div className="px-6 py-4 flex justify-end border-t border-gray-200">
+                            <button
+                                onClick={async () => {
+                                    if (!newUser.email || !newUser.firstName || !newUser.password) {
+                                        showAlert("error", "Missing Fields", "Please fill all required fields.");
+                                        return;
+                                    }
+                                    setCreatingUser(true);
+                                    try {
+                                        await registerUser({
+                                            phoneNumber: newUser.phoneNumber,
+                                            email: newUser.email.toLowerCase(),
+                                            firstName: newUser.firstName,
+                                            lastName: newUser.lastName,
+                                            password: newUser.password,
+                                            role: "user",
+                                            countryCode: "NL",
+                                            profileImg: newUser.profileImg,
+                                        });
+                                        showAlert("success", "User Created", `${newUser.email} registered successfully.`);
+                                        setNewUser({ firstName: "", lastName: "", email: "", phoneNumber: "", password: "", profileImg: "" });
+                                        setShowCreateUserModal(false);
+                                    } catch (err: any) {
+                                        const msg = err.response?.data?.message || "Failed to create user.";
+                                        showAlert("error", "Error", msg);
+                                    } finally {
+                                        setCreatingUser(false);
+                                    }
+                                }}
+                                disabled={creatingUser}
+                                className={`font-semibold px-6 py-2 rounded transition ${creatingUser ? "bg-gray-400 cursor-not-allowed" : "bg-[#C06A4D] text-white hover:bg-[#a6533c]"}`}
+                            >
+                                {creatingUser ? (
+                                    <Circles height="20" width="20" color="#fff" ariaLabel="loading" visible />
+                                ) : (
+                                    "Create User"
+                                )}
                             </button>
                         </div>
                     </div>

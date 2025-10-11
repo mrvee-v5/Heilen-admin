@@ -15,7 +15,7 @@ export default function ServicesTable() {
     const router = useRouter();
     const [services, setServices] = useState<Service[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
+    const itemsPerPage = 15;
     const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(false);
 
@@ -111,7 +111,7 @@ export default function ServicesTable() {
                                                                     width={40}
                                                                     height={40}
                                                                     className="w-full h-full object-cover"
-                                                                    src={service.defaultImage || "/images/placeholder.png"}
+                                                                    src={service.defaultImage || "https://avatar.iran.liara.run/public/26"}
                                                                     alt={service.serviceName}
                                                                 />
                                                             </div>
@@ -126,7 +126,7 @@ export default function ServicesTable() {
                                                     </TableCell>
 
                                                     <TableCell className="px-5 py-4 text-start text-sm text-gray-600 dark:text-gray-400">
-                                                        ${service.price}
+                                                        {service.price ? `€${service.price}` : "N/A"}
                                                     </TableCell>
 
                                                     <TableCell className="px-5 py-4 text-start">

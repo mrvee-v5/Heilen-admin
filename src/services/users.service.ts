@@ -41,7 +41,7 @@ export const getUsers = async (pageIndex: number, pageSize: number, email?: stri
 
 export async function registerUser(data: RegisterUserPayload) {
   try {
-    const res = await axiosExtended.post(`/user/register`, data);
+    const res = await axiosExtended.post(`/admin/users`, data);
     return res.data;
   } catch (error: any) {
     console.error("Register user failed:", error.response?.data || error.message);

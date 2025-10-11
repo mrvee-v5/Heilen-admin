@@ -21,16 +21,9 @@ export interface RegisterUserPayload {
   firstName: string;
   lastName: string;
   password: string;
-  countryCode: string;
-  isThirdParty: boolean;
   profileImgURL: string;
-  location?: {
-    latitude: string;
-    longitude: string;
-  };
-  dob: string;
-  deviceToken?: string;
-  inviteCode?: string;
+
+
 }
 
 export interface BusinessAddress {
