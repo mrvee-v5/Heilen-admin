@@ -7,33 +7,41 @@ import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import Image from "next/image";
 import { UserDetail } from "@/services/types";
-import { extractStringPoint, getLocationDetails, getProfessionTitles } from "@/utils";
+import { extractStringPoint, getLocationDetails } from "@/utils";
+import { updateUserSubscription } from "@/services/users.service";
+import { useAlert } from "../context/AlertContext";
 
 interface UserMetaCardProps {
   user: UserDetail;
 }
 
+const availablePackages = ["platinum", "silver", "bronze", "gold", "free"];
+
 const UserMetaCard: React.FC<UserMetaCardProps> = ({ user }) => {
   const { isOpen, openModal, closeModal } = useModal();
+  const { showAlert } = useAlert();
+
   const [resolvedAddress, setResolvedAddress] = useState<string>("Loading...");
 
-  const handleSave = () => {
-    console.log("Saving changes...");
-    closeModal();
-  };
+  const [isSaving, setIsSaving] = useState(false);
+  const [assignedPackage, setAssignedPackage] = useState(user.subscriptionType || "free");
+  const [isActive, setIsActive] = useState(!!user.subscribed);
 
+  const [tempPackage, setTempPackage] = useState(assignedPackage);
+  const [tempIsActive, setTempIsActive] = useState(isActive);
+
+  // Fetch address from coordinates
   useEffect(() => {
     const fetchAddress = async () => {
       if (user?.location) {
         const coords = extractStringPoint(user.location);
         if (coords && coords.length === 2) {
-          const [lng, lat] = coords.map(parseFloat); // POINT(lng lat)
+          const [lng, lat] = coords.map(parseFloat);
           try {
             const data = await getLocationDetails(lat, lng);
-            const formattedAddress =
-              data?.results?.[0]?.formatted_address || "Location not found";
+            const formattedAddress = data?.results?.[0]?.formatted_address || "Location not found";
             setResolvedAddress(formattedAddress);
-          } catch (err) {
+          } catch {
             setResolvedAddress("Error fetching location");
           }
         } else {
@@ -43,10 +51,39 @@ const UserMetaCard: React.FC<UserMetaCardProps> = ({ user }) => {
         setResolvedAddress("N/A");
       }
     };
-
     fetchAddress();
   }, [user?.location]);
 
+  // Sync user data when it updates
+  useEffect(() => {
+    if (user) {
+      setAssignedPackage(user.subscriptionType || "free");
+      setIsActive(!!user.subscribed);
+    }
+  }, [user]);
+
+  // Open modal and load temporary states
+  const handleOpenModal = () => {
+    setTempPackage(assignedPackage);
+    setTempIsActive(isActive);
+    openModal();
+  };
+
+  // Save subscription updates
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await updateUserSubscription(user.id, tempIsActive, tempPackage.toLowerCase());
+      setAssignedPackage(tempPackage);
+      setIsActive(tempIsActive);
+      closeModal();
+      showAlert("success", "Package Updated", "Subscription package updated successfully.");
+    } catch {
+      showAlert("error", "Update Failed", "Failed to update subscription. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <>
@@ -66,8 +103,8 @@ const UserMetaCard: React.FC<UserMetaCardProps> = ({ user }) => {
                 {user.name}
               </h4>
               <div className="flex flex-col items-center gap-1 text-center xl:flex-row xl:gap-3 xl:text-left">
-                <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2">
-                  {user.business && user.business.businessName || "N/A"}
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {user.business?.businessName || "N/A"}
                 </p>
                 <div className="hidden h-3.5 w-px bg-gray-300 dark:bg-gray-700 xl:block"></div>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -76,18 +113,12 @@ const UserMetaCard: React.FC<UserMetaCardProps> = ({ user }) => {
               </div>
             </div>
           </div>
-          {/* <button
-            onClick={openModal}
-            className="flex w-full items-center justify-center gap-2 rounded-sm border border-gray-300 bg-[var(--app-btn-color)] px-4 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-[var(--app-btn-color)] hover:text-white dark:border-gray-700 dark:bg-[var(--app-btn-color)] dark:text-gray-400 dark:hover:bg-[var(--app-btn-color)] dark:hover:text-white lg:inline-flex lg:w-auto"
-          >
-            <svg className="fill-current" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fillRule="evenodd" clipRule="evenodd" d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z" fill="" />
-            </svg>
-            Edit
-          </button> */}
+
+          {/* Assign Package Button */}
+
         </div>
 
-
+        {/* Personal Info Section */}
         <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:p-6">
           <div>
             <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
@@ -95,96 +126,99 @@ const UserMetaCard: React.FC<UserMetaCardProps> = ({ user }) => {
             </h4>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
               <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  First Name
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {user.firstName}
-                </p>
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">First Name</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">{user.firstName}</p>
               </div>
               <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Last Name
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {user.lastName}
-                </p>
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Last Name</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">{user.lastName}</p>
               </div>
               <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Email address
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {user.email}
-                </p>
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Email</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">{user.email}</p>
               </div>
               <div>
-                <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                  Phone
-                </p>
-                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                  {user.phoneNumber || "N/A"}
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Phone</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">{user.phoneNumber || "N/A"}</p>
+              </div>
+              <div>
+                <p className="mb-2 text-xs text-gray-500 dark:text-gray-400">Subscription</p>
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90 capitalize">
+                  {assignedPackage} ({isActive ? "Active" : "Inactive"})
                 </p>
               </div>
             </div>
           </div>
-
         </div>
+
+        <div className="flex justify-end w-full xl:w-auto">
+          <button
+            onClick={handleOpenModal}
+            className="flex items-center justify-center gap-2 rounded-md border border-gray-300 bg-[#7B8A76] px-4 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-opacity-90"
+          >
+            Assign Package
+          </button>
+        </div>
+
       </div>
-      <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-          <div className="px-2 pr-14">
-            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Edit Personal Information
-            </h4>
-            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Update your details to keep your profile up-to-date.
-            </p>
-          </div>
-          <form className="flex flex-col">
-            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
-              <div>
-                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                  Social Links
-                </h5>
-                <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                  <div>
-                    <Label>First Name</Label>
-                    <Input type="text" defaultValue={user.firstName} />
-                  </div>
-                  <div>
-                    <Label>Last Name</Label>
-                    <Input type="text" defaultValue={user.lastName} />
-                  </div>
-                  <div>
-                    <Label>Email Address</Label>
-                    <Input type="text" defaultValue={user.email} />
-                  </div>
-                  <div>
-                    <Label>Phone</Label>
-                    <Input type="text" defaultValue={user.phoneNumber || ""} />
-                  </div>
-                  {/* Assuming bio is a field on the user or business object */}
-                  <div>
-                    <Label>Bio</Label>
-                    <Input type="text" defaultValue={user.business?.shortDescription || ""} />
-                  </div>
-                </div>
+
+      {/* Subscription Modal */}
+      <Modal showCloseButton={false} isOpen={isOpen} onClose={closeModal} className="max-w-[400px] m-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white w-full max-w-md rounded-xl shadow-lg overflow-hidden dark:bg-gray-900">
+            <div className="flex justify-between items-center bg-[#54392A] px-5 py-3">
+              <h4 className="text-xl font-semibold text-white">Assign Subscription Package</h4>
+              <button onClick={closeModal} className="text-white text-xl hover:text-gray-300">✕</button>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-4">
+                <Label htmlFor="package-select">Package</Label>
+                <select
+                  id="package-select"
+                  value={tempPackage}
+                  onChange={(e) => setTempPackage(e.target.value)}
+                  className="w-full rounded border border-gray-300 p-2 dark:bg-gray-800 dark:text-white"
+                >
+                  {availablePackages.map((pkg) => (
+                    <option key={pkg} value={pkg}>{pkg}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-6 flex items-center gap-3">
+                <Label htmlFor="subscription-toggle" className="mb-0">
+                  Subscription Active
+                </Label>
+                <button
+                  id="subscription-toggle"
+                  role="switch"
+                  aria-checked={tempIsActive}
+                  onClick={() => setTempIsActive((prev) => !prev)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${tempIsActive ? "bg-[#C06A4D]" : "bg-gray-300 dark:bg-gray-700"
+                    }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${tempIsActive ? "translate-x-6" : "translate-x-1"
+                      }`}
+                  />
+                </button>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={closeModal} disabled={isSaving}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? "Saving..." : "Save"}
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-              <Button size="sm" variant="outline" onClick={closeModal}>
-                Close
-              </Button>
-              <Button size="sm" onClick={handleSave}>
-                Save Changes
-              </Button>
-            </div>
-          </form>
+          </div>
         </div>
       </Modal>
     </>
   );
-}
+};
 
 export default UserMetaCard;

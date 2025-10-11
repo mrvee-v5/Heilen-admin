@@ -1,59 +1,59 @@
-// src/services/axios.service.ts
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import { useAuth } from "@/hooks/useAuth";
+import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
+
 const prod = "https://api.heilen.io";
-const dev = "https://dev.heilen.io"
-// The API base URL. Replace with your actual base URL or environment variable.
-const API_BASE_URL = dev; // Example
+const dev = "https://dev.heilen.io";
+const API_BASE_URL = prod;
 
-
-// A list of URLs that do not require an authorization token.
-// You can add more endpoints to this array as needed.
+// Public endpoints that don't require authentication
 const authNotRequiredURLs: string[] = [
-    '/user/send-verification-code',
-    '/user/verify/token',
-    '/user/user/register',
-    '/user/login'
-    // Add other public endpoints here
+  "/user/send-verification-code",
+  "/user/verify/token",
+  "/user/user/register",
+  "/user/login",
+  "/admin/login",
 ];
 
-const getAccessToken = async (): Promise<string | null> => {
-    if (typeof window !== "undefined") {
-        return localStorage.getItem("accessToken");
-    }
-    return null;
-}
-
+// Check if request should skip auth
 const getExcludedURLs = (config: AxiosRequestConfig): boolean => {
-    return (
-        config.url !== undefined &&
-        authNotRequiredURLs.some(endpoint => config.url?.endsWith(endpoint))
-    );
+  return (
+    config.url !== undefined &&
+    authNotRequiredURLs.some((endpoint) => config.url?.endsWith(endpoint))
+  );
 };
 
-// Create a new instance of axios
+// Create axios instance
 const axiosExtended: AxiosInstance = axios.create({
-    baseURL: API_BASE_URL,
-    // Add any other default headers here
+  baseURL: API_BASE_URL,
 });
 
-// Add a request interceptor
-axiosExtended.interceptors.request.use(async (config:any) => {
-    // In a real app, you would get a client API key from a secure location.
-    config.headers['X-API-key'] = "sheyyoudeywhinemeniiiiiiiiii";
+// Add request interceptor
+axiosExtended.interceptors.request.use(
+  async (config: any) => {
+    // Add custom API key header
+    config.headers["X-API-key"] = "sheyyoudeywhinemeniiiiiiiiii";
 
-    if (getExcludedURLs(config)) {
-        return config;
+    // Skip auth if it's a public endpoint
+    if (getExcludedURLs(config)) return config;
+
+    // ✅ Pull token directly from Zustand store
+    const token = useAuth.getState().token;
+
+    if (token) {
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const accessToken = await getAccessToken();
-    console.log("Access token:", accessToken);
-    if (accessToken) {
-        config.headers['Authorization'] = `Bearer ${accessToken}`;
-    }
+ 
+      console.log(
+        `[API:REQUEST] ${config.method?.toUpperCase()} ${config.baseURL || ''}${config.url}`,
+        config.params ? `\nParams: ${JSON.stringify(config.params)}` : '',
+        config.data ? `\nBody: ${JSON.stringify(config.data)}` : ''
+      );
+
 
     return config;
-}, (error:any) => {
-    return Promise.reject(error);
-});
+  },
+  (error: any) => Promise.reject(error)
+);
 
 export default axiosExtended;

@@ -20,12 +20,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${outfit.className} dark:bg-gray-900`}>
         <AlertProvider>
-
           <ThemeProvider>
             <SidebarProvider>
-
               {children}
-
             </SidebarProvider>
           </ThemeProvider>
         </AlertProvider>

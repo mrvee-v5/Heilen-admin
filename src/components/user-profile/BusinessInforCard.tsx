@@ -109,14 +109,14 @@ export default function BusinessInfoCard({ user }: BusinessInfoCardProps) {
                     <div className="flex flex-row gap-3 lg:items-center lg:justify-end">
 
 
-                        <ActionMenu items={packageMenuItems}>
-                            <button
-                                onClick={handleOpenModal}
-                                className="flex items-center justify-center gap-2 rounded-sm border border-gray-300 bg-[#7B8A76] px-4 py-3 text-sm font-medium text-white shadow-theme-xs"
-                            >
-                                Assign Package
-                            </button>
-                        </ActionMenu>
+                        {/* 
+                        <button
+                            onClick={handleOpenModal}
+                            className="flex items-center justify-center gap-2 rounded-sm border border-gray-300 bg-[#7B8A76] px-4 py-3 text-sm font-medium text-white shadow-theme-xs"
+                        >
+                            Assign Package
+                        </button> */}
+
                         {/* <button
                             onClick={() => { }}
                             className="flex items-center justify-center gap-2 rounded-sm border border-gray-300 bg-[var(--app-btn-color)] px-4 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-opacity-90"
@@ -362,7 +362,134 @@ export default function BusinessInfoCard({ user }: BusinessInfoCardProps) {
                             </div>
                         </div>
 
+
+
+
+                        {/* Retreats by this business */}
+
+
+
+
                     </div>
+
+                    {business.services && business.services.length > 0 && (
+                        <section className="mt-10">
+                            <h4 className="text-xl font-semibold text-gray-800 dark:text-white mb-6">
+                                Retreats by this Business
+                            </h4>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                                {business.services.map((service) => {
+                                    const hasDiscount =
+                                        service.discountedPrice &&
+                                        Number(service.discountedPrice) < Number(service.price);
+
+                                    const discountAmount =
+                                        hasDiscount &&
+                                        (Number(service.price) - Number(service.discountedPrice)).toFixed(0);
+
+                                    return (
+                                        <div
+                                            key={service.id}
+                                            className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden group"
+                                        >
+                                            {/* Service Image */}
+                                            <div className="relative h-48 w-full overflow-hidden">
+                                                <img
+                                                    src={service.defaultImage || '/placeholder.jpg'}
+                                                    alt={service.name || 'Retreat Image'}
+                                                    className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500"
+                                                />
+
+                                                {/* Image Overlay */}
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+                                                {/* Favorite Button */}
+                                                {service.isFavourite && (
+                                                    <button
+                                                        aria-label="Mark as Favorite"
+                                                        className="absolute top-3 right-3 bg-white/70 backdrop-blur-sm rounded-full p-2 hover:bg-white transition"
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            fill="#E63946"
+                                                            viewBox="0 0 24 24"
+                                                            strokeWidth={1.5}
+                                                            stroke="#E63946"
+                                                            className="w-5 h-5"
+                                                        >
+                                                            <path
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                                d="M21 8.25c0-2.485-2.015-4.5-4.5-4.5S12 5.765 12 8.25 9.985 12.75 7.5 12.75 3 10.735 3 8.25 5.015 3.75 7.5 3.75 12 5.765 12 8.25 14.015 12.75 16.5 12.75 21 10.735 21 8.25z"
+                                                            />
+                                                        </svg>
+                                                    </button>
+                                                )}
+                                            </div>
+
+                                            {/* Service Details */}
+                                            <div className="p-5">
+                                                <h5 className="text-lg font-semibold text-gray-900 dark:text-white truncate mb-2">
+                                                    {service.name || 'Unnamed Retreat'}
+                                                </h5>
+
+                                                {/* Info Section */}
+                                                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                                                    <li className="flex items-center gap-2">
+                                                        <span className="text-amber-700 font-medium">📅</span>
+                                                        <span>
+                                                            {service.startDate
+                                                                ? new Date(service.startDate).toLocaleDateString()
+                                                                : 'Date TBD'}
+                                                        </span>
+                                                    </li>
+
+                                                    <li className="flex items-center gap-2">
+                                                        <span className="text-amber-700 font-medium">📍</span>
+                                                        <span>
+                                                            {service.location?.city || 'Location'}, {service.location?.country || ''}
+                                                        </span>
+                                                    </li>
+
+                                                    <li className="flex items-center gap-2">
+                                                        <span className="text-amber-700 font-medium">⏱️</span>
+                                                        <span>{service.duration || 'Flexible Duration'}</span>
+                                                    </li>
+                                                </ul>
+
+                                                {/* Pricing */}
+                                                <div className="mt-4">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="text-lg font-bold text-[#C06A4D]">
+                                                            From {service.currency}
+                                                            {hasDiscount ? service.discountedPrice : service.price}
+                                                        </p>
+                                                        {hasDiscount && (
+                                                            <span className="text-sm text-gray-400 line-through">
+                                                                {service.currency}{service.price}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {hasDiscount && (
+                                                        <p className="text-xs text-[#C06A4D] mt-1">
+                                                            💸 Save {service.currency}
+                                                            {discountAmount} until{' '}
+                                                            {service.discountTo
+                                                                ? new Date(service.discountTo).toLocaleDateString()
+                                                                : 'offer ends soon'}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    )}
+
                 </div>
             </div>
             <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">

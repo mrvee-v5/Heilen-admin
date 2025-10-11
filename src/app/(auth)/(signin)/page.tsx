@@ -1,4 +1,5 @@
 "use client";
+
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
@@ -7,7 +8,9 @@ import { EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { adminLogin } from "@/services/users.service"; // import your service
+import { adminLogin } from "@/services/users.service";
+import { useAuth } from "@/hooks/useAuth";
+
 
 export default function SignInForm() {
   const router = useRouter();
@@ -17,9 +20,12 @@ export default function SignInForm() {
   // Form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [deviceToken, setDeviceToken] = useState("web"); // example static token
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // ✅ Zustand actions
+  const setAuth = useAuth((state: any) => state.setAuth);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,7 +33,15 @@ export default function SignInForm() {
     setError(null);
 
     try {
-      await adminLogin({ email, password, deviceToken });
+      // Call the API
+      const res = await adminLogin({ email, password, deviceToken: "" });
+
+      // ✅ Update Zustand store with token and user info
+      if (res?.token && res?.user) {
+        setAuth({ user: res.user, token: res.token });
+      }
+
+      // Redirect to dashboard
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.response?.data?.message || "Login failed");

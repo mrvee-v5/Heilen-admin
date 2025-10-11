@@ -8,14 +8,8 @@ const API_URL = '/admin/users';
 export async function adminLogin(data: { email: string; password: string; deviceToken: string }) {
   try {
     const res = await axiosExtended.post(`/admin/login`, data);
-
     const { token} = res.data;
      axios.defaults.headers.common['authorization'] = `Bearer ${token}`
-    if (typeof window !== 'undefined' && token) {
-      localStorage.setItem('accessToken', token);
-
-    }
-
     return res.data;
   } catch (error: any) {
     console.error("Admin login failed:", error.response?.data || error.message);
@@ -92,7 +86,7 @@ export async function verifyToken(data: { email: string, token: string }) {
 
 export async function getUserById(id: string): Promise<UserDetail> {
   try {
-    const response = await axiosExtended.get(`/admin/users/${id}`);
+    const response = await axiosExtended.get(`/admin/experts/${id}`);
     return response.data;
   } catch (error: any) {
     console.error("Failed to fetch user by ID:", error.response?.data || error.message);

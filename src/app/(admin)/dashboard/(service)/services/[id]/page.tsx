@@ -273,7 +273,6 @@ export default function RetreatDetailPage() {
     const params = useParams();
     const serviceId: any = params.id;
 
-
     const [svc, setSvc] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -282,8 +281,7 @@ export default function RetreatDetailPage() {
     const [isRemarkModalOpen, setRemarkModalOpen] = useState(false);
     const [isUpdatingStatus, setUpdatingStatus] = useState(false);
     const [targetStatus, setTargetStatus] = useState<"Publish" | "Unpublish">("Publish");
-    const { showAlert } = useAlert()
-
+    const { showAlert } = useAlert();
 
     // Fetch retreat detail
     useEffect(() => {
@@ -293,7 +291,6 @@ export default function RetreatDetailPage() {
             try {
                 setLoading(true);
                 const data = await getServiceDetail(serviceId);
-
                 setSvc(data);
             } catch (err) {
                 console.error("Failed to fetch service", err);
@@ -315,9 +312,9 @@ export default function RetreatDetailPage() {
         return () => window.removeEventListener("scroll", onScroll);
     }, []);
 
-    const getFirstSlots = (fd: any[] = []) => {
-        const found = fd.find((r) => r.availableSlots > 0);
-        return found ? found.availableSlots : 0;
+    const getFirstSlots = (slots: any[] = []) => {
+        const found = slots.find((r) => !r.isLimitless);
+        return found ? found.slot : 0;
     };
 
     const handleUpdateStatus = async (publish: boolean, remark: string) => {
@@ -326,28 +323,25 @@ export default function RetreatDetailPage() {
         try {
             setUpdatingStatus(true);
             await updatePublishStatus(serviceId, publish, remark);
-            // Re-fetch service details to show the updated status
             const updatedData = await getServiceDetail(serviceId);
             setSvc(updatedData);
             setRemarkModalOpen(false);
             showAlert(
-                'success',
-                "publish status updated",
-                'Service status updated successfully.'
+                "success",
+                "Publish status updated",
+                "Service status updated successfully."
             );
         } catch (err) {
             console.error("Failed to update service status", err);
             showAlert(
-                'error',
+                "error",
                 "Error",
-                'Failed to update service status. Please try again.'
+                "Failed to update service status. Please try again."
             );
-            // Handle error, e.g., show a toast notification
         } finally {
             setUpdatingStatus(false);
         }
     };
-
 
     const isPublished = svc?.isPublished;
     const buttonText = isPublished ? "Unpublish" : "Publish";
@@ -384,12 +378,17 @@ export default function RetreatDetailPage() {
                         <div className="flex-1">
                             <div className="text-sm font-semibold text-[#54392A]">{svc.name}</div>
                             <div className="text-xs text-[#54392A]">
-                                {svc?.location?.country} • {svc.startDate}
+                                {svc?.location?.country} •{" "}
+                                {svc.timeSlots?.[0]?.startDate}
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <button className="p-2 rounded bg-white"><IconShare /></button>
-                            <button className="p-2 rounded bg-white"><IconChat /></button>
+                            <button className="p-2 rounded bg-white">
+                                <IconShare />
+                            </button>
+                            <button className="p-2 rounded bg-white">
+                                <IconChat />
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -399,19 +398,24 @@ export default function RetreatDetailPage() {
                 {/* Carousel */}
                 <section className="relative bg-[#FAF2E5]">
                     <RetImageCarousel
-                        images={svc.medias?.map((m: any) => m.mediaURL) ?? []}
+                        images={svc.media?.map((m: any) => m.mediaURL) ?? []}
                         onOpenGallery={() => setGalleryOpen(true)}
                     />
 
                     <div className="py-4 mt-10">
                         <div className="bg-[#FAF2E5] rounded-xl p-4">
                             <h1 className="text-xl font-bold text-[#54392A]">{svc.name}</h1>
-                            <p className="text-sm text-[#54392A] mt-1">{svc.textDescription}</p>
+                            <p className="text-sm text-[#54392A] mt-1">
+                                {svc.shortDescription}
+                            </p>
 
                             <div className="mb-5 mt-5 text-sm text-[#54392A]">
                                 <div className="flex items-center gap-2 mb-3">
                                     <IconCalendar />
-                                    <span>{svc.startDate} - {svc.endDate}</span>
+                                    <span>
+                                        {svc.timeSlots?.[0]?.startDate} -{" "}
+                                        {svc.timeSlots?.[0]?.endDate}
+                                    </span>
                                 </div>
                                 <div className="flex items-center gap-2 mb-3">
                                     <IconLocation />
@@ -445,13 +449,23 @@ export default function RetreatDetailPage() {
                         <RetreatActionBar title="Meet the organizer" defaultOpen>
                             <div className="flex items-center gap-4">
                                 <div className="w-14 h-14 rounded-full overflow-hidden">
-                                    <img src={svc.organizerImage} alt={svc.organizerName} />
+                                    <img
+                                        src={svc.business?.owner?.profileImg}
+                                        alt={svc.business?.owner?.name}
+                                    />
                                 </div>
                                 <div>
-                                    <div className="font-semibold text-[#54392A]">{svc.organizerName}</div>
-                                    <div className="text-sm text-gray-600">{svc.organizerDescription}</div>
+                                    <div className="font-semibold text-[#54392A]">
+                                        {svc.business?.owner?.name}
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                        {svc.business?.businessName}
+                                    </div>
                                     <div className="flex items-center gap-1 text-yellow-500 mt-1">
-                                        <IconStar /> <span>{svc.organizerRating}</span>
+                                        <IconStar />{" "}
+                                        <span>
+                                            {svc.statistics?.averageRating ?? 0}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
@@ -460,7 +474,13 @@ export default function RetreatDetailPage() {
                         <RetreatActionBar title="Facilitators">
                             <div className="flex gap-3 overflow-x-auto py-2">
                                 {svc.professionals?.map((p: any) => (
-                                    <TeamCard key={p.id} data={{ name: p.name, image: p.image }} />
+                                    <TeamCard
+                                        key={p.id}
+                                        data={{
+                                            name: p.name,
+                                            image: p.profileImg,
+                                        }}
+                                    />
                                 ))}
                             </div>
                         </RetreatActionBar>
@@ -469,57 +489,66 @@ export default function RetreatDetailPage() {
                             <div dangerouslySetInnerHTML={{ __html: svc.benefit }} />
                         </RetreatActionBar>
 
-
                         {/* Add-ons */}
                         <RetreatActionBar title="Available Add-ons">
                             <div className="space-y-4">
-                                {[
-                                    // Deduplicate addons by ID
-                                    ...new Map(
-                                        (svc.futureDates ?? [])
-                                            .flatMap((fd: any) => fd.addOns ?? [])
-                                            .map((addon: any) => [addon.id, addon])
-                                    ).values()
-                                ].map((addon: any) => (
+                                {svc.addOns?.map((addon: any) => (
                                     <div
                                         key={addon.id}
-                                        className="border border-gray-200 rounded-lg p-4 flex flex-col md:flex-row gap-4  shadow-sm"
+                                        className="border border-gray-200 rounded-lg p-4 flex flex-col gap-4 shadow-sm"
                                     >
-                                        {/* Media thumbnail */}
+                                        <div className="text-sm font-medium text-gray-500">
+                                            {addon.currency} {addon.price} &bull;{" "}
+                                            {addon.slot} slots
+                                        </div>
+
+                                        <div className="flex-1">
+                                            <h4 className="font-semibold text-[#54392A]">
+                                                {addon.name}
+                                            </h4>
+                                            <p className="text-sm text-[#54392A] mt-1">
+                                                {addon.description}
+                                            </p>
+                                        </div>
+
                                         {addon.media?.length > 0 && (
-                                            <div className="w-full md:w-32 h-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                                                <img
-                                                    src={addon.media[0]}
-                                                    alt={addon.name}
-                                                    className="w-full h-full object-cover"
-                                                />
+                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                                {addon.media.map(
+                                                    (img: string, idx: number) => (
+                                                        <div
+                                                            key={idx}
+                                                            className="w-full h-24 overflow-hidden rounded-lg bg-gray-100"
+                                                        >
+                                                            <img
+                                                                src={img}
+                                                                alt={`${addon.name} image ${idx + 1
+                                                                    }`}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                    )
+                                                )}
                                             </div>
                                         )}
-
-                                        {/* Add-on Info */}
-                                        <div className="flex-1">
-                                            <h4 className="font-semibold text-[#54392A]">{addon.name}</h4>
-                                            <p className="text-sm text-[#54392A] mt-1">{addon.description}</p>
-                                            <div className="text-sm mt-2 text-[#54392A]">
-                                                <span className="font-semibold">{addon.currency} {addon.price.toFixed(2)}</span> &bull; {addon.availableSlots} slots left
-                                            </div>
-                                        </div>
                                     </div>
                                 ))}
                             </div>
                         </RetreatActionBar>
 
-
                         <RetreatActionBar title="Included">
-                            <div dangerouslySetInnerHTML={{ __html: svc.includedDetails }} />
+                            <div dangerouslySetInnerHTML={{ __html: svc.include }} />
                         </RetreatActionBar>
 
                         <RetreatActionBar title="Excluded">
-                            <div dangerouslySetInnerHTML={{ __html: svc.excludedDetails }} />
+                            <div dangerouslySetInnerHTML={{ __html: svc.exclude }} />
                         </RetreatActionBar>
 
                         <RetreatActionBar title="Cancellation policy">
-                            <div dangerouslySetInnerHTML={{ __html: svc.cancellationPolicy }} />
+                            <div
+                                dangerouslySetInnerHTML={{
+                                    __html: svc.cancellationPolicy,
+                                }}
+                            />
                         </RetreatActionBar>
                     </div>
                 </section>
@@ -531,7 +560,7 @@ export default function RetreatDetailPage() {
             <div className="w-full bg-white/95 border-t border-gray-200 p-4 mt-8">
                 <div className="max-w-5xl mx-auto px-4 flex gap-3">
                     <div className="flex-1 text-lg font-semibold">
-                        {getFirstSlots(svc.futureDates)} slots left
+                        {getFirstSlots(svc.timeSlots)} slots left
                     </div>
                     <div className="w-48">
                         <PrimaryButton
@@ -551,7 +580,7 @@ export default function RetreatDetailPage() {
             {/* Media gallery modal */}
             <MediaModal
                 open={isGalleryOpen}
-                images={svc.medias?.map((m: any) => m.mediaURL) ?? []}
+                images={svc.media?.map((m: any) => m.mediaURL) ?? []}
                 onClose={() => setGalleryOpen(false)}
             />
 
@@ -559,7 +588,9 @@ export default function RetreatDetailPage() {
             <RemarkModal
                 isOpen={isRemarkModalOpen}
                 onClose={() => setRemarkModalOpen(false)}
-                onConfirm={(remark) => handleUpdateStatus(targetStatus === "Publish", remark)}
+                onConfirm={(remark) =>
+                    handleUpdateStatus(targetStatus === "Publish", remark)
+                }
                 status={targetStatus}
                 isSaving={isUpdatingStatus}
             />

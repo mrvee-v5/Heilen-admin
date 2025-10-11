@@ -22,7 +22,7 @@ export const getServices = async (
 
 
 
-const API_URL_SERVICE_DETAIL = "/user/service";
+const API_URL_SERVICE_DETAIL = "/admin/service";
 
 // Fetch service details by ID
 export const getServiceDetail = async (serviceId: string): Promise<ServiceDetail> => {
