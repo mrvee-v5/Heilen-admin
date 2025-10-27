@@ -439,8 +439,8 @@ export default function BusinessInfoCard({ user }: BusinessInfoCardProps) {
                                                     <li className="flex items-center gap-2">
                                                         <span className="text-amber-700 font-medium">📅</span>
                                                         <span>
-                                                            {service.startDate
-                                                                ? new Date(service.startDate).toLocaleDateString()
+                                                            {service.date
+                                                                ? new Date(service.date).toLocaleDateString()
                                                                 : 'Date TBD'}
                                                         </span>
                                                     </li>

@@ -1,15 +1,17 @@
-// src/services/users.service.ts
 import axios from 'axios';
 import axiosExtended from './axios.service';
 import { RegisterUserPayload, UserDetail, UsersApiResponse } from './types';
+
 const API_URL = '/admin/users';
 
-
+// ==========================
+// AUTH & ADMIN LOGIN
+// ==========================
 export async function adminLogin(data: { email: string; password: string; deviceToken: string }) {
   try {
     const res = await axiosExtended.post(`/admin/login`, data);
-    const { token} = res.data;
-     axios.defaults.headers.common['authorization'] = `Bearer ${token}`
+    const { token } = res.data;
+    axios.defaults.headers.common['authorization'] = `Bearer ${token}`;
     return res.data;
   } catch (error: any) {
     console.error("Admin login failed:", error.response?.data || error.message);
@@ -17,27 +19,21 @@ export async function adminLogin(data: { email: string; password: string; device
   }
 }
 
-
-
+// ==========================
+// USERS CRUD
+// ==========================
 export const getUsers = async (pageIndex: number, pageSize: number, email?: string): Promise<UsersApiResponse> => {
-    try {
-        const params: { pageIndex: number; pageSize: number; email?: string } = {
-            pageIndex: pageIndex,
-            pageSize: pageSize,
-        };
+  try {
+    const params: { pageIndex: number; pageSize: number; email?: string } = { pageIndex, pageSize };
+    if (email) params.email = email;
 
-        if (email) {
-            params.email = email;
-        }
-
-        const response = await axiosExtended.get(API_URL, { params });
-        return response.data;
-    } catch (error) {
-        console.error("Error fetching users:", error);
-        throw error;
-    }
+    const response = await axiosExtended.get(API_URL, { params });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    throw error;
+  }
 };
-
 
 export async function registerUser(data: RegisterUserPayload) {
   try {
@@ -49,8 +45,10 @@ export async function registerUser(data: RegisterUserPayload) {
   }
 }
 
-// New service function to send a verification code to a user's email.
-export async function sendVerificationCode(data: { email: string, mode: "register" | "forgot_password" }) {
+// ==========================
+// USER EMAIL VERIFICATION
+// ==========================
+export async function sendVerificationCode(data: { email: string; mode: "register" | "forgot_password" }) {
   try {
     const res = await axiosExtended.post(`/user/send-verification-code`, data);
     return res.data;
@@ -60,7 +58,6 @@ export async function sendVerificationCode(data: { email: string, mode: "registe
   }
 }
 
-// New service function to get the OTP for a user from the admin dashboard.
 export async function getUsersOtp(email: string) {
   try {
     const res = await axiosExtended.get(`/admin/users-otp/${email}`);
@@ -71,8 +68,7 @@ export async function getUsersOtp(email: string) {
   }
 }
 
-// New service function to verify an OTP token.
-export async function verifyToken(data: { email: string, token: string }) {
+export async function verifyToken(data: { email: string; token: string }) {
   try {
     const res = await axiosExtended.post(`/user/verify-token`, data);
     return res.data;
@@ -82,8 +78,9 @@ export async function verifyToken(data: { email: string, token: string }) {
   }
 }
 
-
-
+// ==========================
+// USER DETAILS & SUBSCRIPTION
+// ==========================
 export async function getUserById(id: string): Promise<UserDetail> {
   try {
     const response = await axiosExtended.get(`/admin/experts/${id}`);
@@ -94,7 +91,6 @@ export async function getUserById(id: string): Promise<UserDetail> {
   }
 }
 
-
 export const updateUserSubscription = async (
   userId: string,
   subscriptionStatus: boolean,
@@ -102,10 +98,7 @@ export const updateUserSubscription = async (
 ): Promise<void> => {
   try {
     await axiosExtended.put(`/admin/update-subscription/${userId}`, null, {
-      params: {
-        subscriptionStatus,
-        subscriptionType,
-      },
+      params: { subscriptionStatus, subscriptionType },
     });
   } catch (error) {
     console.error("Failed to update subscription", error);
@@ -113,3 +106,26 @@ export const updateUserSubscription = async (
   }
 };
 
+// ==========================
+// ✅ NEW ENDPOINTS
+// ==========================
+
+// 🔹 Change a user's password
+export const updateUserPassword = async (id: string, newPassword: string): Promise<void> => {
+  try {
+    await axiosExtended.put(`/admin/users/${id}/password`, { newPassword });
+  } catch (error: any) {
+    console.error("Failed to update user password:", error.response?.data || error.message);
+    throw error;
+  }
+};
+
+// 🔹 Delete a user
+export const deleteUser = async (id: string): Promise<void> => {
+  try {
+    await axiosExtended.delete(`/admin/users/${id}/delete`);
+  } catch (error: any) {
+    console.error("Failed to delete user:", error.response?.data || error.message);
+    throw error;
+  }
+};

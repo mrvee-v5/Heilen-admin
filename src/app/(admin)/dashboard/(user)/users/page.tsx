@@ -2,21 +2,18 @@
 import React, { useState, useEffect } from "react";
 
 import Image from "next/image";
-import { CloseLineIcon, CopyIcon, FilterIcon, SearchIcon } from "@/icons";
+import { CloseLineIcon, CopyIcon, SearchIcon } from "@/icons";
 import * as XLSX from "xlsx";
 import { Circles } from 'react-loader-spinner'
-
-
-import { getUsers, getUsersOtp, registerUser, sendVerificationCode, verifyToken } from "@/services/users.service";
+import { getUsers, registerUser, updateUserPassword, deleteUser } from "@/services/users.service";
 import ComponentCard from "@/components/common/ComponentCard";
-import ActionMenu from "@/components/common/ActionMenu";
 import Pagination from "@/components/tables/Pagination";
 import Badge from "@/components/ui/badge/Badge";
 import { Table, TableHeader, TableRow, TableCell, TableBody } from "@/components/ui/table";
-import { Modal } from "@/components/ui/modal";
 import FileUploader from "@/components/common/FileUploader";
 import { useAlert } from "@/components/context/AlertContext";
 import { useRouter } from "next/navigation";
+import ReusableModal from "@/components/modal/ReusableModal";
 
 interface User {
     id: string;
@@ -41,6 +38,15 @@ export default function UsersTable() {
     const router = useRouter();
     const [searchInput, setSearchInput] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
+    const [showEditPasswordModal, setShowEditPasswordModal] = useState(false);
+    const [passwordLoading, setPasswordLoading] = useState(false);
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+    const [newPassword, setNewPassword] = useState("");
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+    const [deleting, setDeleting] = useState(false);
+    const [deletingUserEmail, setDeletingUserEmail] = useState<string | null>(null);
+
 
     // ✅ NEW STATES
     const [showCreateUserModal, setShowCreateUserModal] = useState(false);
@@ -280,7 +286,9 @@ export default function UsersTable() {
                                                 <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Email</TableCell>
                                                 <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Phone</TableCell>
                                                 <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Status</TableCell>
-                                                <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400">Actions</TableCell>
+                                                <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400" children={undefined} />
+                                                <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400" children={undefined} />
+                                                <TableCell isHeader className="px-5 py-3 font-medium text-gray-500 text-start text-theme-xs dark:text-gray-400" children={undefined} />
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
@@ -340,6 +348,33 @@ export default function UsersTable() {
                                                                 View
                                                             </button>
                                                         </TableCell>
+                                                        <TableCell className="px-4 py-3 text-start">
+                                                            {/* <ActionMenu items={getActionMenus(user.id)} children={undefined} /> */}
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedUserId(user.id);
+                                                                    setShowEditPasswordModal(true);
+                                                                }}
+                                                                className="px-3 py-1 text-xs bg-[#54392A] text-white rounded-md font-medium"
+                                                            >
+                                                                Edit
+                                                            </button>
+
+                                                        </TableCell>
+                                                        <TableCell className="px-4 py-3 text-start">
+
+                                                            <button
+                                                                onClick={() => {
+                                                                    setDeletingUserId(user.id);
+                                                                    setDeletingUserEmail(user.email);
+                                                                    setShowDeleteModal(true);
+                                                                }}
+                                                                className="px-3 py-1 text-xs bg-[#EB5757] text-white rounded-md font-medium"
+                                                            >
+                                                                Delete
+                                                            </button>
+
+                                                        </TableCell>
                                                     </TableRow>
                                                 ))
                                             ) : (
@@ -364,122 +399,217 @@ export default function UsersTable() {
                     )}
                 </div>
             </ComponentCard>
-            <Modal showCloseButton={false} isOpen={showUploadModal} onClose={() => setShowUploadModal(false)} className="max-w-[700px] m-4">
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white w-full max-w-lg rounded-lg shadow-lg overflow-hidden">
-                        {/* Header */}
-                        <div className="flex justify-between items-center bg-[#54392A] text-white px-5 py-3">
-                            <h2 className="text-lg font-semibold">Import User Data</h2>
-                            <button
-                                onClick={() => setShowUploadModal(false)}
-                                className="text-white text-xl hover:text-gray-300"
-                            >
-                                ✕
-                            </button>
-                        </div>
-                        {/* Body */}
-                        <div className="p-6">
-                            <p className="text-sm text-gray-600 mb-4">
-                                <span className="font-semibold">Note:</span> Kindly ensure the template matches the required template for extraction
-                            </p>
-                            <FileUploader onFilesAdded={handleFilesAdded} />
-                            <div className="mt-4 text-center text-sm text-gray-600">
-                                Don’t have the right template?{" "}
-                                <a
-                                    href="/templates/user_template.xlsx"
-                                    download
-                                    className="text-[#C06A4D] font-medium hover:underline"
-                                >
-                                    Download Template
-                                </a>
-                            </div>
-                        </div>
-                        {/* Footer */}
-                        <div className="px-6 py-4 flex justify-end border-t border-gray-200">
-                            <button
-                                onClick={handleExtractData}
-                                disabled={uploadedFiles.length === 0 || isExtracting}
-                                className={`font-semibold px-6 py-2 rounded transition ${uploadedFiles.length === 0 || isExtracting ? "bg-gray-400 cursor-not-allowed" : "bg-[#C06A4D] text-white hover:bg-[#a6533c]"}`}
-                            >
-                                {isExtracting ? <Circles
-                                    height="20"
-                                    width="20"
-                                    color="#C06A4D"
-                                    ariaLabel="circles-loading"
-                                    visible={true}
-                                />
-                                    : "Extract Data"}
-                            </button>
-                        </div>
+
+
+            {/* Upload Modal using ReusableModal */}
+            <ReusableModal isOpen={showUploadModal} onClose={() => setShowUploadModal(false)} title="Import User Data">
+                <div className="p-6">
+                    <p className="text-sm text-gray-600 mb-4">
+                        <span className="font-semibold">Note:</span> Kindly ensure the template matches the required template for extraction
+                    </p>
+                    <FileUploader onFilesAdded={handleFilesAdded} />
+                    <div className="mt-4 text-center text-sm text-gray-600">
+                        Don’t have the right template?{" "}
+                        <a
+                            href="/templates/user_template.xlsx"
+                            download
+                            className="text-[#C06A4D] font-medium hover:underline"
+                        >
+                            Download Template
+                        </a>
                     </div>
                 </div>
-            </Modal>
+                <div className="px-6 py-4 flex justify-end border-t border-gray-200">
+                    <button
+                        onClick={handleExtractData}
+                        disabled={uploadedFiles.length === 0 || isExtracting}
+                        className={`font-semibold px-6 py-2 rounded transition ${uploadedFiles.length === 0 || isExtracting ? "bg-gray-400 cursor-not-allowed" : "bg-[#C06A4D] text-white hover:bg-[#a6533c]"}`}
+                    >
+                        {isExtracting ? (
+                            <Circles
+                                height="20"
+                                width="20"
+                                color="#C06A4D"
+                                ariaLabel="circles-loading"
+                                visible={true}
+                            />
+                        ) : (
+                            "Extract Data"
+                        )}
+                    </button>
+                </div>
+            </ReusableModal>
+
+            {/* Create User Modal using ReusableModal */}
+            <ReusableModal isOpen={showCreateUserModal} onClose={() => setShowCreateUserModal(false)} title="Create New User">
+                <div className="p-6 space-y-4">
+                    {["firstName", "lastName", "email", "phoneNumber", "password", "profileImg"].map((f) => (
+                        <div key={f}>
+                            <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">{f}</label>
+                            <input
+                                type={f === "password" ? "password" : "text"}
+                                value={newUser[f as keyof typeof newUser]}
+                                onChange={(e) => setNewUser({ ...newUser, [f]: e.target.value })}
+                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#C06A4D]"
+                            />
+                        </div>
+                    ))}
+                </div>
+                <div className="px-6 py-4 flex justify-end border-t border-gray-200">
+                    <button
+                        onClick={async () => {
+                            if (!newUser.email || !newUser.firstName || !newUser.password) {
+                                showAlert("error", "Missing Fields", "Please fill all required fields.");
+                                return;
+                            }
+                            setCreatingUser(true);
+                            try {
+                                await registerUser({
+                                    phoneNumber: newUser.phoneNumber,
+                                    email: newUser.email.toLowerCase(),
+                                    firstName: newUser.firstName,
+                                    lastName: newUser.lastName,
+                                    password: newUser.password,
+                                    role: "user",
+                                    countryCode: "NL",
+                                    profileImg: newUser.profileImg,
+                                });
+                                showAlert("success", "User Created", `${newUser.email} registered successfully.`);
+                                setNewUser({ firstName: "", lastName: "", email: "", phoneNumber: "", password: "", profileImg: "" });
+                                setShowCreateUserModal(false);
+                            } catch (err: any) {
+                                const msg = err.response?.data?.message || "Failed to create user.";
+                                showAlert("error", "Error", msg);
+                            } finally {
+                                setCreatingUser(false);
+                            }
+                        }}
+                        disabled={creatingUser}
+                        className={`font-semibold px-6 py-2 rounded transition ${creatingUser ? "bg-gray-400 cursor-not-allowed" : "bg-[#C06A4D] text-white hover:bg-[#a6533c]"}`}
+                    >
+                        {creatingUser ? (
+                            <Circles height="20" width="20" color="#fff" ariaLabel="loading" visible />
+                        ) : (
+                            "Create User"
+                        )}
+                    </button>
+                </div>
+            </ReusableModal>
 
 
 
-            {/* ✅ NEW Create User Modal */}
-            <Modal showCloseButton={false} isOpen={showCreateUserModal} onClose={() => setShowCreateUserModal(false)} className="max-w-[700px] m-4">
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white w-full max-w-lg rounded-lg shadow-lg overflow-hidden">
-                        <div className="flex justify-between items-center bg-[#54392A] text-white px-5 py-3">
-                            <h2 className="text-lg font-semibold">Create New User</h2>
-                            <button onClick={() => setShowCreateUserModal(false)} className="text-white text-xl hover:text-gray-300">✕</button>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            {["firstName", "lastName", "email", "phoneNumber", "password", "profileImg"].map((f) => (
-                                <div key={f}>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1 capitalize">{f}</label>
-                                    <input
-                                        type={f === "password" ? "password" : "text"}
-                                        value={newUser[f as keyof typeof newUser]}
-                                        onChange={(e) => setNewUser({ ...newUser, [f]: e.target.value })}
-                                        className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#C06A4D]"
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                        <div className="px-6 py-4 flex justify-end border-t border-gray-200">
-                            <button
-                                onClick={async () => {
-                                    if (!newUser.email || !newUser.firstName || !newUser.password) {
-                                        showAlert("error", "Missing Fields", "Please fill all required fields.");
-                                        return;
-                                    }
-                                    setCreatingUser(true);
-                                    try {
-                                        await registerUser({
-                                            phoneNumber: newUser.phoneNumber,
-                                            email: newUser.email.toLowerCase(),
-                                            firstName: newUser.firstName,
-                                            lastName: newUser.lastName,
-                                            password: newUser.password,
-                                            role: "user",
-                                            countryCode: "NL",
-                                            profileImg: newUser.profileImg,
-                                        });
-                                        showAlert("success", "User Created", `${newUser.email} registered successfully.`);
-                                        setNewUser({ firstName: "", lastName: "", email: "", phoneNumber: "", password: "", profileImg: "" });
-                                        setShowCreateUserModal(false);
-                                    } catch (err: any) {
-                                        const msg = err.response?.data?.message || "Failed to create user.";
-                                        showAlert("error", "Error", msg);
-                                    } finally {
-                                        setCreatingUser(false);
-                                    }
-                                }}
-                                disabled={creatingUser}
-                                className={`font-semibold px-6 py-2 rounded transition ${creatingUser ? "bg-gray-400 cursor-not-allowed" : "bg-[#C06A4D] text-white hover:bg-[#a6533c]"}`}
-                            >
-                                {creatingUser ? (
-                                    <Circles height="20" width="20" color="#fff" ariaLabel="loading" visible />
-                                ) : (
-                                    "Create User"
-                                )}
-                            </button>
-                        </div>
+            <ReusableModal
+                isOpen={showEditPasswordModal}
+                onClose={() => {
+                    setShowEditPasswordModal(false);
+                    setNewPassword("");
+                    setSelectedUserId(null);
+                }}
+                title="Update User Password"
+            >
+                <div className="p-6 space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                        <input
+                            type={"text"}
+                            value={newPassword}
+                            onChange={(e) => setNewPassword(e.target.value)}
+                            className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#C06A4D]"
+                        />
                     </div>
                 </div>
-            </Modal>
+
+                <div className="px-6 py-4 flex justify-end border-t border-gray-200">
+                    <button
+                        onClick={async () => {
+                            if (!selectedUserId || !newPassword) {
+                                showAlert("error", "Missing Fields", "Please enter a new password.");
+                                return;
+                            }
+                            setPasswordLoading(true);
+                            try {
+                                await updateUserPassword(selectedUserId, newPassword);
+                                showAlert("success", "Password Updated", "User password updated successfully.");
+                                setShowEditPasswordModal(false);
+                                setNewPassword("");
+                            } catch (err: any) {
+                                showAlert("error", "Error", err.response?.data?.message || "Failed to update password.");
+                            } finally {
+                                setPasswordLoading(false);
+                            }
+                        }}
+                        disabled={passwordLoading}
+                        className={`font-semibold px-6 py-2 rounded transition ${passwordLoading ? "bg-gray-400 cursor-not-allowed" : "bg-[#C06A4D] text-white hover:bg-[#a6533c]"
+                            }`}
+                    >
+                        {passwordLoading ? (
+                            <Circles height="20" width="20" color="#fff" ariaLabel="loading" visible />
+                        ) : (
+                            "Update Password"
+                        )}
+                    </button>
+                </div>
+            </ReusableModal>
+
+
+            <ReusableModal
+                isOpen={showDeleteModal}
+                onClose={() => {
+                    setShowDeleteModal(false);
+                    setDeletingUserId(null);
+                    setDeletingUserEmail(null);
+                }}
+                title="Confirm Delete"
+            >
+                <div className="p-6 text-center space-y-4">
+                    <p className="text-gray-700">
+                        Are you sure you want to delete <span className="font-semibold">{deletingUserEmail}</span>?<br />
+                        This action cannot be undone.
+                    </p>
+                </div>
+
+                <div className="px-6 py-4 flex justify-center gap-3 border-t border-gray-200">
+                    <button
+                        onClick={() => {
+                            setShowDeleteModal(false);
+                            setDeletingUserId(null);
+                            setDeletingUserEmail(null);
+                        }}
+                        className="font-semibold px-6 py-2 rounded bg-gray-300 hover:bg-gray-400 text-gray-800 transition"
+                    >
+                        Cancel
+                    </button>
+
+                    <button
+                        onClick={async () => {
+                            if (!deletingUserId) return;
+                            setDeleting(true);
+                            try {
+                                await deleteUser(deletingUserId);
+                                showAlert("success", "User Deleted", `${deletingUserEmail} has been removed.`);
+                                setUsers(users.filter((u) => u.id !== deletingUserId));
+                                setShowDeleteModal(false);
+                            } catch (err: any) {
+                                showAlert("error", "Error", err.response?.data?.message || "Failed to delete user.");
+                            } finally {
+                                setDeleting(false);
+                            }
+                        }}
+                        disabled={deleting}
+                        className={`font-semibold px-6 py-2 rounded transition ${deleting ? "bg-gray-400 cursor-not-allowed" : "bg-[#EB5757] text-white hover:bg-red-700"
+                            }`}
+                    >
+                        {deleting ? (
+                            <Circles height="20" width="20" color="#fff" ariaLabel="loading" visible />
+                        ) : (
+                            "Delete"
+                        )}
+                    </button>
+                </div>
+            </ReusableModal>
+
+
+
         </div>
     );
 }

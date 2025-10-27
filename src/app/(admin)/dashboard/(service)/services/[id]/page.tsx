@@ -461,12 +461,12 @@ export default function RetreatDetailPage() {
                                     <div className="text-sm text-gray-600">
                                         {svc.business?.businessName}
                                     </div>
-                                    <div className="flex items-center gap-1 text-yellow-500 mt-1">
+                                    {/* <div className="flex items-center gap-1 text-yellow-500 mt-1">
                                         <IconStar />{" "}
                                         <span>
                                             {svc.statistics?.averageRating ?? 0}
                                         </span>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </div>
                         </RetreatActionBar>

@@ -42,3 +42,8 @@ export const getProfessionTitles = (professions: any): string => {
         return "Invalid professions data";
     }
 };
+
+
+export const getCurrencySign = () => {
+
+}

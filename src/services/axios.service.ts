@@ -3,14 +3,10 @@ import axios, { AxiosInstance, AxiosRequestConfig } from "axios";
 
 const prod = "https://api.heilen.io";
 const dev = "https://dev.heilen.io";
-const API_BASE_URL = prod;
+const API_BASE_URL = dev;
 
 // Public endpoints that don't require authentication
 const authNotRequiredURLs: string[] = [
-  "/user/send-verification-code",
-  "/user/verify/token",
-  "/user/user/register",
-  "/user/login",
   "/admin/login",
 ];
 
