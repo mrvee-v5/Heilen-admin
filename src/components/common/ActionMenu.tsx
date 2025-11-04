@@ -1,47 +1,50 @@
-"use client";
-import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
-import { MoreDotIcon } from "@/icons";
+'use client'
+import { useRouter } from 'next/navigation'
+import React, { useEffect, useRef, useState } from 'react'
+import { MoreDotIcon } from '@/icons'
 
 // Types for individual menu items
 export interface ActionMenuItem {
-  label: string;
-  onClick?: () => void;
-  route?: string; // Optional route for navigation
+  label: string
+  onClick?: () => void
+  route?: string // Optional route for navigation
 }
 
 interface ActionMenuProps {
-  items: ActionMenuItem[];
-  children?: React.ReactNode;
+  items: ActionMenuItem[]
+  children?: React.ReactNode
 }
 
 const ActionMenu: React.FC<ActionMenuProps> = ({ items, children }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const router = useRouter()
 
-  const toggleDropdown = () => setIsOpen(!isOpen);
-  const closeDropdown = () => setIsOpen(false);
+  const toggleDropdown = () => setIsOpen(!isOpen)
+  const closeDropdown = () => setIsOpen(false)
 
   const handleItemClick = (item: ActionMenuItem) => {
-    closeDropdown();
+    closeDropdown()
     if (item.onClick) {
-      item.onClick();
+      item.onClick()
     } else if (item.route) {
-      router.push(item.route);
+      router.push(item.route)
     }
-  };
+  }
 
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        closeDropdown();
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        closeDropdown()
       }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   return (
     <div className="relative inline-block" ref={dropdownRef}>
@@ -73,7 +76,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ items, children }) => {
           <el-menu
             anchor="bottom end"
             popover
-            class="absolute right-0 z-20 mt-2 w-56 origin-top-right rounded-md bg-white shadow-lg outline-1 outline-black/5 transition transform"
+            class="absolute right-0 z-20 mt-2 w-56 origin-top-right transform rounded-md bg-white shadow-lg outline-1 outline-black/5 transition"
           >
             <div className="py-1">
               {items.map((item, index) => (
@@ -91,7 +94,7 @@ const ActionMenu: React.FC<ActionMenuProps> = ({ items, children }) => {
         )}
       </el-dropdown>
     </div>
-  );
-};
+  )
+}
 
-export default ActionMenu;
+export default ActionMenu

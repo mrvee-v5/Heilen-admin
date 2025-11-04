@@ -1,115 +1,111 @@
-"use client";
-import React, { useEffect, useState } from "react";
-import { useModal } from "../../hooks/useModal";
-import { Modal } from "../ui/modal";
-import Button from "../ui/button/Button";
-import Input from "../form/input/InputField";
-import Label from "../form/Label";
-import ActionMenu from "../common/ActionMenu";
-import { UserDetail } from "@/services/types";
-import { updateUserSubscription } from "@/services/users.service";
-import { useAlert } from "../context/AlertContext";
+'use client'
+import React, { useEffect, useState } from 'react'
+import { useModal } from '../../hooks/useModal'
+import { Modal } from '../ui/modal'
+import Button from '../ui/button/Button'
+import Input from '../form/input/InputField'
+import Label from '../form/Label'
+import ActionMenu from '../common/ActionMenu'
+import { UserDetail } from '@/services/types'
+import { updateUserSubscription } from '@/services/users.service'
+import { useAlert } from '../context/AlertContext'
 
 interface BusinessInfoCardProps {
-    user: UserDetail;
+  user: UserDetail
 }
 
-const availablePackages = ["platinum", "silver", "bronze", "gold", "free"];
+const availablePackages = ['platinum', 'silver', 'bronze', 'gold', 'free']
 
 export default function BusinessInfoCard({ user }: BusinessInfoCardProps) {
-    const { isOpen, openModal, closeModal } = useModal();
-    const business = user.business;
-    const [isSaving, setIsSaving] = useState(false);
-    const { showAlert } = useAlert();
+  const { isOpen, openModal, closeModal } = useModal()
+  const business = user.business
+  const [isSaving, setIsSaving] = useState(false)
+  const { showAlert } = useAlert()
 
+  const [assignedPackage, setAssignedPackage] = useState(
+    user.subscriptionType || 'free'
+  )
+  const [isActive, setIsActive] = useState(!!user.subscribed)
 
+  // Temp states for modal inputs
+  const [tempPackage, setTempPackage] = useState(assignedPackage)
+  const [tempIsActive, setTempIsActive] = useState(isActive)
 
-    const [assignedPackage, setAssignedPackage] = useState(user.subscriptionType || "free");
-    const [isActive, setIsActive] = useState(!!user.subscribed);
-
-    // Temp states for modal inputs
-    const [tempPackage, setTempPackage] = useState(assignedPackage);
-    const [tempIsActive, setTempIsActive] = useState(isActive);
-
-    if (!business) {
-        return (
-            <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
-                <p>No business information available for this user.</p>
-            </div>
-        );
-    }
-
-    // Open modal and initialize temp state with current values
-
-
-    // Save changes handler
-    const handleSave = async () => {
-        setIsSaving(true);
-        try {
-            await updateUserSubscription(user.id, tempIsActive, tempPackage.toLowerCase());
-            setAssignedPackage(tempPackage);
-            setIsActive(tempIsActive);
-            closeModal();
-            showAlert(
-                'success',
-                "Package Updated",
-                'Subscription package updated successfully.'
-            );
-        } catch (error) {
-            alert("Failed to update subscription. Please try again.");
-        }
-        setIsSaving(false);
-    };
-
-    const packageMenuItems = availablePackages.map((pkg: any) => ({
-        label: pkg,
-        onClick: () => {
-            setAssignedPackage(pkg);
-        },
-    }));
-
-
-
-
-
-    // Initial assigned subscription states
-
-
-    // Update assigned states whenever `user` changes (important if user loads async)
-    useEffect(() => {
-        if (user) {
-            setAssignedPackage(user.subscriptionType || "free");
-            setIsActive(!!user.subscribed);
-        }
-    }, [user]);
-
-    // Sync temp modal inputs whenever assigned states change or when modal opens
-    const handleOpenModal = () => {
-        setTempPackage(assignedPackage);
-        setTempIsActive(isActive);
-        openModal();
-    };
-
-    useEffect(() => {
-        console.log("User subscriptionType:", user.subscriptionType);
-        console.log("User subscribed:", user.subscribed);
-        console.log("assignedPackage:", assignedPackage);
-        console.log("isActive:", isActive);
-        console.log("tempPackage:", tempPackage);
-        console.log("tempIsActive:", tempIsActive);
-    }, [user, assignedPackage, isActive, tempPackage, tempIsActive]);
-
+  if (!business) {
     return (
-        <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-                <div className="w-full lg:flex-1">
-                    <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
-                        Business Information
-                    </h4>
-                    <div className="flex flex-row gap-3 lg:items-center lg:justify-end">
+      <div className="rounded-2xl border border-gray-200 p-5 lg:p-6 dark:border-gray-800">
+        <p>No business information available for this user.</p>
+      </div>
+    )
+  }
 
+  // Open modal and initialize temp state with current values
 
-                        {/* 
+  // Save changes handler
+  const handleSave = async () => {
+    setIsSaving(true)
+    try {
+      await updateUserSubscription(
+        user.id,
+        tempIsActive,
+        tempPackage.toLowerCase()
+      )
+      setAssignedPackage(tempPackage)
+      setIsActive(tempIsActive)
+      closeModal()
+      showAlert(
+        'success',
+        'Package Updated',
+        'Subscription package updated successfully.'
+      )
+    } catch (error) {
+      alert('Failed to update subscription. Please try again.')
+    }
+    setIsSaving(false)
+  }
+
+  const packageMenuItems = availablePackages.map((pkg: any) => ({
+    label: pkg,
+    onClick: () => {
+      setAssignedPackage(pkg)
+    },
+  }))
+
+  // Initial assigned subscription states
+
+  // Update assigned states whenever `user` changes (important if user loads async)
+  useEffect(() => {
+    if (user) {
+      setAssignedPackage(user.subscriptionType || 'free')
+      setIsActive(!!user.subscribed)
+    }
+  }, [user])
+
+  // Sync temp modal inputs whenever assigned states change or when modal opens
+  const handleOpenModal = () => {
+    setTempPackage(assignedPackage)
+    setTempIsActive(isActive)
+    openModal()
+  }
+
+  useEffect(() => {
+    console.log('User subscriptionType:', user.subscriptionType)
+    console.log('User subscribed:', user.subscribed)
+    console.log('assignedPackage:', assignedPackage)
+    console.log('isActive:', isActive)
+    console.log('tempPackage:', tempPackage)
+    console.log('tempIsActive:', tempIsActive)
+  }, [user, assignedPackage, isActive, tempPackage, tempIsActive])
+
+  return (
+    <div className="rounded-2xl border border-gray-200 p-5 lg:p-6 dark:border-gray-800">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div className="w-full lg:flex-1">
+          <h4 className="text-lg font-semibold text-gray-800 lg:mb-6 dark:text-white/90">
+            Business Information
+          </h4>
+          <div className="flex flex-row gap-3 lg:items-center lg:justify-end">
+            {/* 
                         <button
                             onClick={handleOpenModal}
                             className="flex items-center justify-center gap-2 rounded-sm border border-gray-300 bg-[#7B8A76] px-4 py-3 text-sm font-medium text-white shadow-theme-xs"
@@ -117,7 +113,7 @@ export default function BusinessInfoCard({ user }: BusinessInfoCardProps) {
                             Assign Package
                         </button> */}
 
-                        {/* <button
+            {/* <button
                             onClick={() => { }}
                             className="flex items-center justify-center gap-2 rounded-sm border border-gray-300 bg-[var(--app-btn-color)] px-4 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-opacity-90"
                         >
@@ -136,499 +132,530 @@ export default function BusinessInfoCard({ user }: BusinessInfoCardProps) {
                             </svg>
                             Edit
                         </button> */}
+          </div>
 
-                    </div>
-
-
-                    <div className="mb-6">
-                        <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                            Business Logo
-                        </p>
-                        <div className="text-sm font-medium text-gray-800 dark:text-white/90">
-                            {business.profileImg && (
-                                <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 w-20 h-20">
-                                    <img
-                                        src={business.profileImg}
-                                        alt="Profile Image"
-                                        className="w-full h-full object-contain"
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
-
-
-
-                        <div>
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Business Name
-                            </p>
-                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                {business.businessName || "N/A"}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Package
-                            </p>
-                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                {assignedPackage}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Email address
-                            </p>
-                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                {business.businessEmail || "N/A"}
-                            </p>
-                        </div>
-                        <div>
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Phone
-                            </p>
-                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                {business.businessPhoneNumber || "N/A"}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Country
-                            </p>
-                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                {business.businessAddress?.country || "N/A"}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                City/State
-                            </p>
-                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                {business.businessAddress ? `${business.businessAddress.city}, ${business.businessAddress.state}` : "N/A"}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Full Address
-                            </p>
-                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                {business.businessAddress ? `${business.businessAddress.fullAddress}, ${business.businessAddress.fullAddress}` : "N/A"}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Postal Code
-                            </p>
-                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                {business.businessAddress?.postalCode || "N/A"}
-                            </p>
-                        </div>
-
-                        <div>
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Joined Date
-                            </p>
-                            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                {business.createdDate ? new Date(business.createdDate).toLocaleDateString() : "N/A"}
-                            </p>
-                        </div>
-
-
-
-                        <div className="lg:col-span-2">
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Short Description
-                            </p>
-                            <div className="flex flex-wrap gap-2 min-w-0">
-                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                    {business.shortDescription || "N/A"}
-                                </p>
-                            </div>
-                        </div>
-
-
-
-                        <div className="lg:col-span-2">
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Detailed Description
-                            </p>
-                            <div className="flex flex-wrap gap-2 min-w-0">
-                                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                                    {business.description || "N/A"}
-                                </p>
-                            </div>
-                        </div>
-
-
-
-
-                        <div className="lg:col-span-2">
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Professions
-                            </p>
-                            <div className="flex flex-wrap gap-2 min-w-0">
-                                {business.professions.length > 0 ? (
-                                    business.professions.map((professionString, index) => {
-                                        try {
-                                            const profession = JSON.parse(professionString);
-                                            return (
-                                                <span
-                                                    key={index}
-                                                    className="inline-block rounded-full px-3 py-1 text-xs font-medium text-white bg-[var(--app-btn-color)]"
-                                                >
-                                                    {profession.title}
-                                                </span>
-                                            );
-                                        } catch (e) {
-                                            console.error("Failed to parse profession JSON:", e);
-                                            return null;
-                                        }
-                                    })
-                                ) : (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">N/A</p>
-                                )}
-                            </div>
-                        </div>
-                        <div className="lg:col-span-2">
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Business Location
-                            </p>
-                            <div className="flex flex-wrap gap-2 min-w-0">
-                                {business.availableCountries.length > 0 ? (
-                                    business.availableCountries.map((location) => (
-                                        <span
-                                            key={location}
-                                            className="inline-block rounded-full px-3 py-1 text-xs font-medium text-white bg-[var(--app-btn-color)]"
-                                        >
-                                            {location}
-                                        </span>
-                                    ))
-                                ) : (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">N/A</p>
-                                )}
-                            </div>
-                        </div>
-                        <div className="lg:col-span-2">
-                            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                                Gallery
-                            </p>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {/* Profile Image */}
-                                {business.profileImg && (
-                                    <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-                                        <img
-                                            src={business.profileImg}
-                                            alt="Profile Image"
-                                            className="w-full h-32 object-cover hover:scale-105 transition-transform duration-300"
-                                        />
-                                    </div>
-                                )}
-
-                                {/* Media Items (Images & Videos) */}
-                                {business.media && business.media.length > 0 ? (
-                                    business.media.map((mediaItem) => {
-                                        const isVideo = mediaItem.mediaURL.toLowerCase().endsWith(".mp4");
-                                        return (
-                                            <div
-                                                key={mediaItem.id}
-                                                className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
-                                            >
-                                                {isVideo ? (
-                                                    <video
-                                                        src={mediaItem.mediaURL}
-                                                        controls
-                                                        className="w-full h-32 object-cover"
-                                                    />
-                                                ) : (
-                                                    <img
-                                                        src={mediaItem.mediaURL}
-                                                        alt="Gallery Item"
-                                                        className="w-full h-32 object-cover hover:scale-105 transition-transform duration-300"
-                                                    />
-                                                )}
-                                            </div>
-                                        );
-                                    })
-                                ) : (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 col-span-full">
-                                        Gallery not available in the provided data.
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-
-
-
-                        {/* Retreats by this business */}
-
-
-
-
-                    </div>
-
-                    {business.services && business.services.length > 0 && (
-                        <section className="mt-10">
-                            <h4 className="text-xl font-semibold text-gray-800 dark:text-white mb-6">
-                                Retreats by this Business
-                            </h4>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {business.services.map((service) => {
-                                    const hasDiscount =
-                                        service.discountedPrice &&
-                                        Number(service.discountedPrice) < Number(service.price);
-
-                                    const discountAmount =
-                                        hasDiscount &&
-                                        (Number(service.price) - Number(service.discountedPrice)).toFixed(0);
-
-                                    return (
-                                        <div
-                                            key={service.id}
-                                            className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden group"
-                                        >
-                                            {/* Service Image */}
-                                            <div className="relative h-48 w-full overflow-hidden">
-                                                <img
-                                                    src={service.defaultImage || '/placeholder.jpg'}
-                                                    alt={service.name || 'Retreat Image'}
-                                                    className="w-full h-full object-cover rounded-2xl group-hover:scale-105 transition-transform duration-500"
-                                                />
-
-                                                {/* Image Overlay */}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
-
-                                                {/* Favorite Button */}
-                                                {service.isFavourite && (
-                                                    <button
-                                                        aria-label="Mark as Favorite"
-                                                        className="absolute top-3 right-3 bg-white/70 backdrop-blur-sm rounded-full p-2 hover:bg-white transition"
-                                                    >
-                                                        <svg
-                                                            xmlns="http://www.w3.org/2000/svg"
-                                                            fill="#E63946"
-                                                            viewBox="0 0 24 24"
-                                                            strokeWidth={1.5}
-                                                            stroke="#E63946"
-                                                            className="w-5 h-5"
-                                                        >
-                                                            <path
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                d="M21 8.25c0-2.485-2.015-4.5-4.5-4.5S12 5.765 12 8.25 9.985 12.75 7.5 12.75 3 10.735 3 8.25 5.015 3.75 7.5 3.75 12 5.765 12 8.25 14.015 12.75 16.5 12.75 21 10.735 21 8.25z"
-                                                            />
-                                                        </svg>
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            {/* Service Details */}
-                                            <div className="p-5">
-                                                <h5 className="text-lg font-semibold text-gray-900 dark:text-white truncate mb-2">
-                                                    {service.name || 'Unnamed Retreat'}
-                                                </h5>
-
-                                                {/* Info Section */}
-                                                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                                                    <li className="flex items-center gap-2">
-                                                        <span className="text-amber-700 font-medium">📅</span>
-                                                        <span>
-                                                            {service.date
-                                                                ? new Date(service.date).toLocaleDateString()
-                                                                : 'Date TBD'}
-                                                        </span>
-                                                    </li>
-
-                                                    <li className="flex items-center gap-2">
-                                                        <span className="text-amber-700 font-medium">📍</span>
-                                                        <span>
-                                                            {service.location?.city || 'Location'}, {service.location?.country || ''}
-                                                        </span>
-                                                    </li>
-
-                                                    <li className="flex items-center gap-2">
-                                                        <span className="text-amber-700 font-medium">⏱️</span>
-                                                        <span>{service.duration || 'Flexible Duration'}</span>
-                                                    </li>
-                                                </ul>
-
-                                                {/* Pricing */}
-                                                <div className="mt-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <p className="text-lg font-bold text-[#C06A4D]">
-                                                            From {service.currency}
-                                                            {hasDiscount ? service.discountedPrice : service.price}
-                                                        </p>
-                                                        {hasDiscount && (
-                                                            <span className="text-sm text-gray-400 line-through">
-                                                                {service.currency}{service.price}
-                                                            </span>
-                                                        )}
-                                                    </div>
-
-                                                    {hasDiscount && (
-                                                        <p className="text-xs text-[#C06A4D] mt-1">
-                                                            💸 Save {service.currency}
-                                                            {discountAmount} until{' '}
-                                                            {service.discountTo
-                                                                ? new Date(service.discountTo).toLocaleDateString()
-                                                                : 'offer ends soon'}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </section>
-                    )}
-
+          <div className="mb-6">
+            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+              Business Logo
+            </p>
+            <div className="text-sm font-medium text-gray-800 dark:text-white/90">
+              {business.profileImg && (
+                <div className="h-20 w-20 overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                  <img
+                    src={business.profileImg}
+                    alt="Profile Image"
+                    className="h-full w-full object-contain"
+                  />
                 </div>
+              )}
             </div>
-            <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
-                <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
-                    <div className="px-2 pr-14">
-                        <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-                            Edit Business Information
-                        </h4>
-                        <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-                            Update the business details.
-                        </p>
-                    </div>
-                    <form className="flex flex-col">
-                        <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
-                            <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
-                                <div>
-                                    <Label>Business Name</Label>
-                                    <Input type="text" defaultValue={business.businessName || ""} />
-                                </div>
-                                <div>
-                                    <Label>Email Address</Label>
-                                    <Input type="text" defaultValue={business.businessEmail || ""} />
-                                </div>
-                                <div>
-                                    <Label>Phone</Label>
-                                    <Input type="text" defaultValue={business.businessPhoneNumber || ""} />
-                                </div>
-                                <div>
-                                    <Label>Instagram Handle</Label>
-                                    <Input type="text" defaultValue={business.instagramHandle || ""} />
-                                </div>
-                            </div>
-                            <div className="mt-7">
-                                <h5 className="mb-5 text-lg font-medium text-gray-800 dark:text-white/90 lg:mb-6">
-                                    Description
-                                </h5>
-                                <div className="grid grid-cols-1">
-                                    <div className="col-span-1">
-                                        <Label>Short Description</Label>
-                                        <Input type="text" defaultValue={business.shortDescription || ""} />
-                                    </div>
-                                    <div className="col-span-1">
-                                        <Label>Full Description</Label>
-                                        <textarea
-                                            className="w-full rounded-xl border border-gray-300 bg-gray-100 p-3 text-sm font-medium text-gray-800 outline-none transition-all duration-300 focus:border-gray-500 disabled:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white/80 dark:focus:border-gray-600"
-                                            rows={4}
-                                            defaultValue={business.description || ""}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
-                            <Button size="sm" variant="outline" onClick={closeModal}>
-                                Close
-                            </Button>
-                            <Button size="sm" onClick={handleSave}>
-                                Save Changes
-                            </Button>
-                        </div>
-                    </form>
-                </div>
-            </Modal>
+          </div>
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Business Name
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {business.businessName || 'N/A'}
+              </p>
+            </div>
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Package
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {assignedPackage}
+              </p>
+            </div>
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Email address
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {business.businessEmail || 'N/A'}
+              </p>
+            </div>
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Phone
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {business.businessPhoneNumber || 'N/A'}
+              </p>
+            </div>
 
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Country
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {business.businessAddress?.country || 'N/A'}
+              </p>
+            </div>
 
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                City/State
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {business.businessAddress
+                  ? `${business.businessAddress.city}, ${business.businessAddress.state}`
+                  : 'N/A'}
+              </p>
+            </div>
 
-            {/* Modal for subscription update */}
-            <Modal showCloseButton={false} isOpen={isOpen} onClose={closeModal} className="max-w-[400px] m-4">
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                    <div className="bg-white w-full max-w-md rounded-xl shadow-lg overflow-hidden dark:bg-gray-900">
-                        {/* Header */}
-                        <div className="flex justify-between items-center bg-[#54392A] px-5 py-3">
-                            <h4 className="text-xl font-semibold text-white">Assign Subscription Package</h4>
-                            <button
-                                onClick={closeModal}
-                                className="text-white text-xl hover:text-gray-300"
-                                aria-label="Close modal"
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Full Address
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {business.businessAddress
+                  ? `${business.businessAddress.fullAddress}, ${business.businessAddress.fullAddress}`
+                  : 'N/A'}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Postal Code
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {business.businessAddress?.postalCode || 'N/A'}
+              </p>
+            </div>
+
+            <div>
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Joined Date
+              </p>
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                {business.createdDate
+                  ? new Date(business.createdDate).toLocaleDateString()
+                  : 'N/A'}
+              </p>
+            </div>
+
+            <div className="lg:col-span-2">
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Short Description
+              </p>
+              <div className="flex min-w-0 flex-wrap gap-2">
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {business.shortDescription || 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2">
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Detailed Description
+              </p>
+              <div className="flex min-w-0 flex-wrap gap-2">
+                <p className="text-sm font-medium text-gray-800 dark:text-white/90">
+                  {business.description || 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            <div className="lg:col-span-2">
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Professions
+              </p>
+              <div className="flex min-w-0 flex-wrap gap-2">
+                {business.professions.length > 0 ? (
+                  business.professions.map((professionString, index) => {
+                    try {
+                      const profession = JSON.parse(professionString)
+                      return (
+                        <span
+                          key={index}
+                          className="inline-block rounded-full bg-[var(--app-btn-color)] px-3 py-1 text-xs font-medium text-white"
+                        >
+                          {profession.title}
+                        </span>
+                      )
+                    } catch (e) {
+                      console.error('Failed to parse profession JSON:', e)
+                      return null
+                    }
+                  })
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    N/A
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="lg:col-span-2">
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Business Location
+              </p>
+              <div className="flex min-w-0 flex-wrap gap-2">
+                {business.availableCountries.length > 0 ? (
+                  business.availableCountries.map((location) => (
+                    <span
+                      key={location}
+                      className="inline-block rounded-full bg-[var(--app-btn-color)] px-3 py-1 text-xs font-medium text-white"
+                    >
+                      {location}
+                    </span>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    N/A
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="lg:col-span-2">
+              <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
+                Gallery
+              </p>
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {/* Profile Image */}
+                {business.profileImg && (
+                  <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+                    <img
+                      src={business.profileImg}
+                      alt="Profile Image"
+                      className="h-32 w-full object-cover transition-transform duration-300 hover:scale-105"
+                    />
+                  </div>
+                )}
+
+                {/* Media Items (Images & Videos) */}
+                {business.media && business.media.length > 0 ? (
+                  business.media.map((mediaItem) => {
+                    const isVideo = mediaItem.mediaURL
+                      .toLowerCase()
+                      .endsWith('.mp4')
+                    return (
+                      <div
+                        key={mediaItem.id}
+                        className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700"
+                      >
+                        {isVideo ? (
+                          <video
+                            src={mediaItem.mediaURL}
+                            controls
+                            className="h-32 w-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={mediaItem.mediaURL}
+                            alt="Gallery Item"
+                            className="h-32 w-full object-cover transition-transform duration-300 hover:scale-105"
+                          />
+                        )}
+                      </div>
+                    )
+                  })
+                ) : (
+                  <p className="col-span-full text-sm text-gray-500 dark:text-gray-400">
+                    Gallery not available in the provided data.
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Retreats by this business */}
+          </div>
+
+          {business.services && business.services.length > 0 && (
+            <section className="mt-10">
+              <h4 className="mb-6 text-xl font-semibold text-gray-800 dark:text-white">
+                Retreats by this Business
+              </h4>
+
+              <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+                {business.services.map((service) => {
+                  const hasDiscount =
+                    service.discountedPrice &&
+                    Number(service.discountedPrice) < Number(service.price)
+
+                  const discountAmount =
+                    hasDiscount &&
+                    (
+                      Number(service.price) - Number(service.discountedPrice)
+                    ).toFixed(0)
+
+                  return (
+                    <div
+                      key={service.id}
+                      className="group relative overflow-hidden rounded-2xl bg-white shadow-md transition duration-300 hover:shadow-xl dark:bg-gray-900"
+                    >
+                      {/* Service Image */}
+                      <div className="relative h-48 w-full overflow-hidden">
+                        <img
+                          src={service.defaultImage || '/placeholder.jpg'}
+                          alt={service.name || 'Retreat Image'}
+                          className="h-full w-full rounded-2xl object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+
+                        {/* Image Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+
+                        {/* Favorite Button */}
+                        {service.isFavourite && (
+                          <button
+                            aria-label="Mark as Favorite"
+                            className="absolute top-3 right-3 rounded-full bg-white/70 p-2 backdrop-blur-sm transition hover:bg-white"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              fill="#E63946"
+                              viewBox="0 0 24 24"
+                              strokeWidth={1.5}
+                              stroke="#E63946"
+                              className="h-5 w-5"
                             >
-                                ✕
-                            </button>
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M21 8.25c0-2.485-2.015-4.5-4.5-4.5S12 5.765 12 8.25 9.985 12.75 7.5 12.75 3 10.735 3 8.25 5.015 3.75 7.5 3.75 12 5.765 12 8.25 14.015 12.75 16.5 12.75 21 10.735 21 8.25z"
+                              />
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Service Details */}
+                      <div className="p-5">
+                        <h5 className="mb-2 truncate text-lg font-semibold text-gray-900 dark:text-white">
+                          {service.name || 'Unnamed Retreat'}
+                        </h5>
+
+                        {/* Info Section */}
+                        <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
+                          <li className="flex items-center gap-2">
+                            <span className="font-medium text-amber-700">
+                              📅
+                            </span>
+                            <span>
+                              {service.date
+                                ? new Date(service.date).toLocaleDateString()
+                                : 'Date TBD'}
+                            </span>
+                          </li>
+
+                          <li className="flex items-center gap-2">
+                            <span className="font-medium text-amber-700">
+                              📍
+                            </span>
+                            <span>
+                              {service.location?.city || 'Location'},{' '}
+                              {service.location?.country || ''}
+                            </span>
+                          </li>
+
+                          <li className="flex items-center gap-2">
+                            <span className="font-medium text-amber-700">
+                              ⏱️
+                            </span>
+                            <span>
+                              {service.duration || 'Flexible Duration'}
+                            </span>
+                          </li>
+                        </ul>
+
+                        {/* Pricing */}
+                        <div className="mt-4">
+                          <div className="flex items-center gap-2">
+                            <p className="text-lg font-bold text-[#C06A4D]">
+                              From {service.currency}
+                              {hasDiscount
+                                ? service.discountedPrice
+                                : service.price}
+                            </p>
+                            {hasDiscount && (
+                              <span className="text-sm text-gray-400 line-through">
+                                {service.currency}
+                                {service.price}
+                              </span>
+                            )}
+                          </div>
+
+                          {hasDiscount && (
+                            <p className="mt-1 text-xs text-[#C06A4D]">
+                              💸 Save {service.currency}
+                              {discountAmount} until{' '}
+                              {service.discountTo
+                                ? new Date(
+                                    service.discountTo
+                                  ).toLocaleDateString()
+                                : 'offer ends soon'}
+                            </p>
+                          )}
                         </div>
-
-                        {/* Body */}
-                        <div className="p-6">
-                            <div className="mb-4">
-                                <Label htmlFor="package-select">Package</Label>
-                                <select
-                                    id="package-select"
-                                    value={tempPackage}
-                                    onChange={(e: any) => setTempPackage(e.target.value)}
-                                    className="w-full rounded border border-gray-300 p-2 dark:bg-gray-800 dark:text-white"
-                                >
-                                    {availablePackages.map((pkg) => (
-                                        <option key={pkg} value={pkg}>
-                                            {pkg}
-                                        </option>
-                                    ))}
-                                </select>
-
-
-                            </div>
-
-                            <div className="mb-6 flex items-center gap-3">
-                                <Label htmlFor="subscription-toggle" className="mb-0">
-                                    Subscription Active
-                                </Label>
-
-                                {/* Slider toggle button */}
-                                <button
-                                    id="subscription-toggle"
-                                    role="switch"
-                                    aria-checked={tempIsActive}
-                                    onClick={() => setTempIsActive((prev) => !prev)}
-                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#C06A4D] ${tempIsActive ? "bg-[#C06A4D]" : "bg-gray-300 dark:bg-gray-700"
-                                        }`}
-                                >
-                                    <span
-                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${tempIsActive ? "translate-x-6" : "translate-x-1"
-                                            }`}
-                                    />
-                                </button>
-                            </div>
-
-                            {/* Footer */}
-                            <div className="flex justify-end gap-3">
-                                <Button variant="outline" onClick={closeModal} disabled={isSaving}>
-                                    Cancel
-                                </Button>
-                                <Button onClick={handleSave} disabled={isSaving}>
-                                    {isSaving ? "Saving..." : "Save"}
-                                </Button>
-                            </div>
-                        </div>
+                      </div>
                     </div>
-                </div>
-            </Modal>
-
-
-
+                  )
+                })}
+              </div>
+            </section>
+          )}
         </div>
-    );
+      </div>
+      <Modal isOpen={isOpen} onClose={closeModal} className="m-4 max-w-[700px]">
+        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 lg:p-11 dark:bg-gray-900">
+          <div className="px-2 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              Edit Business Information
+            </h4>
+            <p className="mb-6 text-sm text-gray-500 lg:mb-7 dark:text-gray-400">
+              Update the business details.
+            </p>
+          </div>
+          <form className="flex flex-col">
+            <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                <div>
+                  <Label>Business Name</Label>
+                  <Input
+                    type="text"
+                    defaultValue={business.businessName || ''}
+                  />
+                </div>
+                <div>
+                  <Label>Email Address</Label>
+                  <Input
+                    type="text"
+                    defaultValue={business.businessEmail || ''}
+                  />
+                </div>
+                <div>
+                  <Label>Phone</Label>
+                  <Input
+                    type="text"
+                    defaultValue={business.businessPhoneNumber || ''}
+                  />
+                </div>
+                <div>
+                  <Label>Instagram Handle</Label>
+                  <Input
+                    type="text"
+                    defaultValue={business.instagramHandle || ''}
+                  />
+                </div>
+              </div>
+              <div className="mt-7">
+                <h5 className="mb-5 text-lg font-medium text-gray-800 lg:mb-6 dark:text-white/90">
+                  Description
+                </h5>
+                <div className="grid grid-cols-1">
+                  <div className="col-span-1">
+                    <Label>Short Description</Label>
+                    <Input
+                      type="text"
+                      defaultValue={business.shortDescription || ''}
+                    />
+                  </div>
+                  <div className="col-span-1">
+                    <Label>Full Description</Label>
+                    <textarea
+                      className="w-full rounded-xl border border-gray-300 bg-gray-100 p-3 text-sm font-medium text-gray-800 transition-all duration-300 outline-none focus:border-gray-500 disabled:bg-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white/80 dark:focus:border-gray-600"
+                      rows={4}
+                      defaultValue={business.description || ''}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 flex items-center gap-3 px-2 lg:justify-end">
+              <Button size="sm" variant="outline" onClick={closeModal}>
+                Close
+              </Button>
+              <Button size="sm" onClick={handleSave}>
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      {/* Modal for subscription update */}
+      <Modal
+        showCloseButton={false}
+        isOpen={isOpen}
+        onClose={closeModal}
+        className="m-4 max-w-[400px]"
+      >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-full max-w-md overflow-hidden rounded-xl bg-white shadow-lg dark:bg-gray-900">
+            {/* Header */}
+            <div className="flex items-center justify-between bg-[#54392A] px-5 py-3">
+              <h4 className="text-xl font-semibold text-white">
+                Assign Subscription Package
+              </h4>
+              <button
+                onClick={closeModal}
+                className="text-xl text-white hover:text-gray-300"
+                aria-label="Close modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6">
+              <div className="mb-4">
+                <Label htmlFor="package-select">Package</Label>
+                <select
+                  id="package-select"
+                  value={tempPackage}
+                  onChange={(e: any) => setTempPackage(e.target.value)}
+                  className="w-full rounded border border-gray-300 p-2 dark:bg-gray-800 dark:text-white"
+                >
+                  {availablePackages.map((pkg) => (
+                    <option key={pkg} value={pkg}>
+                      {pkg}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="mb-6 flex items-center gap-3">
+                <Label htmlFor="subscription-toggle" className="mb-0">
+                  Subscription Active
+                </Label>
+
+                {/* Slider toggle button */}
+                <button
+                  id="subscription-toggle"
+                  role="switch"
+                  aria-checked={tempIsActive}
+                  onClick={() => setTempIsActive((prev) => !prev)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:ring-2 focus:ring-[#C06A4D] focus:ring-offset-2 focus:outline-none ${
+                    tempIsActive
+                      ? 'bg-[#C06A4D]'
+                      : 'bg-gray-300 dark:bg-gray-700'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      tempIsActive ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Footer */}
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={closeModal}
+                  disabled={isSaving}
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handleSave} disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  )
 }
