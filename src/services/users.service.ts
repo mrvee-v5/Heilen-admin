@@ -29,22 +29,35 @@ export async function adminLogin(data: {
 export const getUsers = async (
   pageIndex: number,
   pageSize: number,
-  email?: string
+  email?: string,
+  name?: string,
+  q?: string
 ): Promise<UsersApiResponse> => {
   try {
-    const params: { pageIndex: number; pageSize: number; email?: string } = {
-      pageIndex,
-      pageSize,
-    }
-    if (email) params.email = email
+    const params: { 
+      pageIndex: string; 
+      pageSize: string; 
+      email?: string; 
+      name?: string; 
+      q?: string; 
+    } = {
+      pageIndex: String(pageIndex), // Ensure values are strings
+      pageSize: String(pageSize),   // Ensure values are strings
+    };
 
-    const response = await axiosExtended.get(API_URL, { params })
-    return response.data
+    // Conditionally add email, name, and q to params if they are provided
+    if (email) params.email = email;
+    if (name) params.name = name;
+    if (q) params.q = q;
+
+    const response = await axiosExtended.get(API_URL, { params });
+    return response.data;
   } catch (error) {
-    console.error('Error fetching users:', error)
-    throw error
+    console.error('Error fetching users:', error);
+    throw error;
   }
-}
+};
+
 
 export async function registerUser(data: RegisterUserPayload) {
   try {

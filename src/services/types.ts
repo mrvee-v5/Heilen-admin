@@ -139,6 +139,9 @@ export interface ServiceCategory {
 }
 
 export interface Service {
+  status: string
+  businessName: string
+  owner: any
   serviceId: string
   serviceName: string
   serviceCategory: ServiceCategory
@@ -250,4 +253,48 @@ export interface ServiceDetail {
   professionals: Professional[]
   reviews: any[]
   businessOtherServices: any[]
+}
+
+
+// --- Publish Request Types ---
+export interface PublishRequest {
+  id: string
+  service: {
+    id: string
+    name: string
+    description: string
+    price: string
+    currency: string
+    category: string
+    defaultImage?: string
+    location: {
+      name: string
+      country: string
+      city: string
+      state: string
+      fullAddress: string
+      postalCode: string
+      description: string
+      latitude: string
+      longitude: string
+    }
+  }
+  business: {
+    id: string
+    name: string
+    email: string
+    owner: {
+      id: string
+      name: string
+      email: string
+    }
+  }
+  requestedDate: string
+}
+
+export interface PublishRequestsApiResponse {
+  data: PublishRequest[]
+  totalInDb: number
+  pageSize: number
+  pageIndex: number
 }

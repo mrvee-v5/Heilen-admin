@@ -74,12 +74,25 @@ export default function UsersTable() {
 
   const itemsPerPage = 10
 
+  // ✅ UPDATED SEARCH LOGIC
   useEffect(() => {
     const fetchUsersData = async () => {
       setLoading(true)
       setError(null)
       try {
-        const apiData = await getUsers(currentPage, itemsPerPage, searchQuery)
+        const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(searchQuery)
+        const emailParam = isEmail ? searchQuery : ''
+        const nameParam = !isEmail ? searchQuery : ''
+        const qParam = searchQuery || ''
+
+        const apiData = await getUsers(
+          currentPage,
+          itemsPerPage,
+          emailParam,
+          nameParam,
+          qParam
+        )
+
         setUsers(apiData.data)
         setTotalUsers(apiData.totalInDb)
       } catch (err: any) {
@@ -96,7 +109,7 @@ export default function UsersTable() {
 
   const handleSearchClick = () => {
     setCurrentPage(1)
-    setSearchQuery(searchInput)
+    setSearchQuery(searchInput.trim())
   }
 
   const handleClearSearch = () => {
@@ -168,16 +181,6 @@ export default function UsersTable() {
             const email = String(row.Email || '').toLowerCase()
 
             try {
-              // Step 1: Send verification code
-              // await sendVerificationCode({ email, mode: "register" });
-
-              // Step 2: Get OTP from admin endpoint
-              // const otpResponse = await getUsersOtp(email);
-              // const token = otpResponse.otp;
-              // Step 3: Verify the token
-              // await verifyToken({ email, token });
-
-              // Step 4: Register the user
               await registerUser({
                 phoneNumber: String(row.Phone || ''),
                 email: email,
@@ -195,7 +198,6 @@ export default function UsersTable() {
               return { status: 'failed', email: email, reason: reason }
             }
           })
-          // Wait for the current batch to complete before moving to the next
           results.push(...(await Promise.allSettled(batchPromises)))
         }
 
@@ -235,6 +237,8 @@ export default function UsersTable() {
 
     reader.readAsArrayBuffer(file)
   }
+
+
   return (
     <div className="space-y-6">
       <ComponentCard title="All users">
@@ -246,7 +250,7 @@ export default function UsersTable() {
               </span>
               <input
                 type="text"
-                placeholder="Search users by email"
+                placeholder="Search users by name or email  .."
                 className="flex-grow bg-transparent text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none dark:text-white/90 dark:placeholder:text-white/30"
                 onChange={(e) => setSearchInput(e.target.value)}
                 value={searchInput}
