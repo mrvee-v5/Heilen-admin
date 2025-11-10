@@ -26,6 +26,10 @@ import { useAlert } from '@/components/context/AlertContext'
 import { useRouter } from 'next/navigation'
 import ReusableModal from '@/components/modal/ReusableModal'
 
+interface ExpertProfession {
+  title: string
+}
+
 interface User {
   id: string
   name: string
@@ -33,7 +37,9 @@ interface User {
   image: string
   subscribed: boolean
   retreatOwner: boolean
-  subscriptionType: 'platinum' | 'silver' | 'bronze'
+  subscriptionType: 'platinum' | 'silver' | 'bronze' | ''
+  activeServicesCount?: number
+  expertProfessions?: ExpertProfession[]
 }
 
 export default function UsersTable() {
@@ -56,11 +62,8 @@ export default function UsersTable() {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
-  const [deletingUserEmail, setDeletingUserEmail] = useState<string | null>(
-    null
-  )
+  const [deletingUserEmail, setDeletingUserEmail] = useState<string | null>(null)
 
-  // ✅ NEW STATES
   const [showCreateUserModal, setShowCreateUserModal] = useState(false)
   const [creatingUser, setCreatingUser] = useState(false)
   const [newUser, setNewUser] = useState({
@@ -74,7 +77,6 @@ export default function UsersTable() {
 
   const itemsPerPage = 10
 
-  // ✅ UPDATED SEARCH LOGIC
   useEffect(() => {
     const fetchUsersData = async () => {
       setLoading(true)
@@ -173,7 +175,7 @@ export default function UsersTable() {
         const rows = XLSX.utils.sheet_to_json<any>(worksheet)
 
         const results = []
-        const concurrencyLimit = 5 // Process 5 users at a time
+        const concurrencyLimit = 5
 
         for (let i = 0; i < rows.length; i += concurrencyLimit) {
           const batch = rows.slice(i, i + concurrencyLimit)
@@ -238,7 +240,6 @@ export default function UsersTable() {
     reader.readAsArrayBuffer(file)
   }
 
-
   return (
     <div className="space-y-6">
       <ComponentCard title="All users">
@@ -281,7 +282,6 @@ export default function UsersTable() {
               >
                 Import Users
               </button>
-              {/* ✅ NEW BUTTON */}
               <button
                 onClick={() => setShowCreateUserModal(true)}
                 className="rounded bg-[#54392A] px-4 py-2 text-white hover:bg-[#3e2a1f]"
@@ -302,8 +302,8 @@ export default function UsersTable() {
             </div>
           ) : (
             <div className="overflow-hidden rounded-xl border border-gray-200 bg-[var(--app-bg)] dark:border-white/[0.05] dark:bg-white/[0.03]">
-              <div className="w-full overflow-x-auto">
-                <div className="relative h-[100vh] min-w-[900px] overflow-y-auto">
+           <div className="w-full overflow-x-auto rounded-xl border border-gray-200 dark:border-white/[0.05]">
+  <div className="min-w-[1200px]">
                   <Table>
                     <TableHeader className="border-b border-gray-100 dark:border-white/[0.05]">
                       <TableRow>
@@ -319,14 +319,12 @@ export default function UsersTable() {
                         >
                           Email
                         </TableCell>
-
                         <TableCell
                           isHeader
                           className="text-theme-xs px-5 py-3 text-start font-medium text-gray-500 dark:text-gray-400"
                         >
                           Subscribed
                         </TableCell>
-
                         <TableCell
                           isHeader
                           className="text-theme-xs px-5 py-3 text-start font-medium text-gray-500 dark:text-gray-400"
@@ -334,21 +332,23 @@ export default function UsersTable() {
                           Membership
                         </TableCell>
 
+                        {/* ✅ New Columns */}
                         <TableCell
                           isHeader
                           className="text-theme-xs px-5 py-3 text-start font-medium text-gray-500 dark:text-gray-400"
-                          children={undefined}
-                        />
+                        >
+                          Active Services
+                        </TableCell>
                         <TableCell
                           isHeader
                           className="text-theme-xs px-5 py-3 text-start font-medium text-gray-500 dark:text-gray-400"
-                          children={undefined}
-                        />
-                        <TableCell
-                          isHeader
-                          className="text-theme-xs px-5 py-3 text-start font-medium text-gray-500 dark:text-gray-400"
-                          children={undefined}
-                        />
+                        >
+                          Expert Professions
+                        </TableCell>
+
+                        <TableCell isHeader className="text-theme-xs px-5 py-3" children={undefined} />
+                        <TableCell isHeader className="text-theme-xs px-5 py-3" children={undefined} />
+                        <TableCell isHeader className="text-theme-xs px-5 py-3" children={undefined} />
                       </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y divide-gray-100 dark:divide-white/[0.05]">
@@ -417,8 +417,35 @@ export default function UsersTable() {
                               </Badge>
                             </TableCell>
 
+                            {/* ✅ New Column: Active Services */}
+                            <TableCell className="px-4 py-3 text-start text-gray-700 dark:text-gray-300">
+                              {user.activeServicesCount ?? 0}
+                            </TableCell>
+
+                            {/* ✅ New Column: Expert Professions */}
                             <TableCell className="px-4 py-3 text-start">
-                              {/* <ActionMenu items={getActionMenus(user.id)} children={undefined} /> */}
+                              {user.expertProfessions &&
+                              user.expertProfessions.length > 0 ? (
+                                <div className="flex flex-wrap gap-2">
+                                  {user.expertProfessions.map((prof, idx) => (
+                                    <Badge
+                                      key={idx}
+                                      size="sm"
+                                      color="warning"
+                                      className="capitalize"
+                                    >
+                                      {prof || 'N/A'}
+                                    </Badge>
+                                  ))}
+                                </div>
+                              ) : (
+                                <span className="text-gray-400 text-sm">
+                                  N/A
+                                </span>
+                              )}
+                            </TableCell>
+
+                            <TableCell className="px-4 py-3 text-start">
                               <button
                                 onClick={() =>
                                   router.push(`/dashboard/users/${user.id}`)
@@ -429,7 +456,6 @@ export default function UsersTable() {
                               </button>
                             </TableCell>
                             <TableCell className="px-4 py-3 text-start">
-                              {/* <ActionMenu items={getActionMenus(user.id)} children={undefined} /> */}
                               <button
                                 onClick={() => {
                                   setSelectedUserId(user.id)
@@ -477,7 +503,7 @@ export default function UsersTable() {
         </div>
       </ComponentCard>
 
-      {/* Upload Modal using ReusableModal */}
+      {/* Upload Modal */}
       <ReusableModal
         isOpen={showUploadModal}
         onClose={() => setShowUploadModal(false)}
@@ -489,277 +515,201 @@ export default function UsersTable() {
             template matches the required template for extraction
           </p>
           <FileUploader onFilesAdded={handleFilesAdded} />
-          <div className="mt-4 text-center text-sm text-gray-600">
-            Don’t have the right template?{' '}
-            <a
-              href="/templates/user_template.xlsx"
-              download
-              className="font-medium text-[#C06A4D] hover:underline"
+          <div className="mt-4 text-center">
+            <button
+              onClick={handleExtractData}
+              disabled={isExtracting}
+              className={`rounded px-4 py-2 text-white ${
+                isExtracting
+                  ? 'bg-gray-400'
+                  : 'bg-[#C06A4D] hover:bg-[#a6533c]'
+              }`}
             >
-              Download Template
-            </a>
+              {isExtracting ? 'Importing...' : 'Extract & Import'}
+            </button>
           </div>
         </div>
-        <div className="flex justify-end border-t border-gray-200 px-6 py-4">
+      </ReusableModal>
+
+      {/* Edit Password Modal */}
+      <ReusableModal
+        isOpen={showEditPasswordModal}
+        onClose={() => setShowEditPasswordModal(false)}
+        title="Update Password"
+      >
+        <div className="p-6 space-y-4">
+          <input
+            type="password"
+            placeholder="Enter new password"
+            className="w-full rounded border border-gray-300 p-2"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+          />
           <button
-            onClick={handleExtractData}
-            disabled={uploadedFiles.length === 0 || isExtracting}
-            className={`rounded px-6 py-2 font-semibold transition ${uploadedFiles.length === 0 || isExtracting ? 'cursor-not-allowed bg-gray-400' : 'bg-[#C06A4D] text-white hover:bg-[#a6533c]'}`}
+            disabled={passwordLoading}
+            onClick={async () => {
+              if (!selectedUserId || !newPassword.trim()) {
+                showAlert('error', 'Error', 'Please enter a new password.')
+                return
+              }
+              try {
+                setPasswordLoading(true)
+                await updateUserPassword(selectedUserId, newPassword)
+                showAlert('success', 'Updated', 'Password updated successfully.')
+                setShowEditPasswordModal(false)
+                setNewPassword('')
+              } catch {
+                showAlert('error', 'Error', 'Failed to update password.')
+              } finally {
+                setPasswordLoading(false)
+              }
+            }}
+            className={`w-full rounded px-4 py-2 text-white ${
+              passwordLoading ? 'bg-gray-400' : 'bg-[#C06A4D]'
+            }`}
           >
-            {isExtracting ? (
-              <Circles
-                height="20"
-                width="20"
-                color="#C06A4D"
-                ariaLabel="circles-loading"
-                visible={true}
-              />
-            ) : (
-              'Extract Data'
-            )}
+            {passwordLoading ? 'Updating...' : 'Update Password'}
           </button>
         </div>
       </ReusableModal>
 
-      {/* Create User Modal using ReusableModal */}
+      {/* Delete User Modal */}
+      <ReusableModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete User"
+      >
+        <div className="p-6 text-center">
+          <p className="text-gray-700">
+            Are you sure you want to delete{' '}
+            <span className="font-semibold">{deletingUserEmail}</span>?
+          </p>
+          <div className="mt-4 flex justify-center gap-4">
+            <button
+              disabled={deleting}
+              onClick={async () => {
+                if (!deletingUserId) return
+                try {
+                  setDeleting(true)
+                  await deleteUser(deletingUserId)
+                  showAlert(
+                    'success',
+                    'Deleted',
+                    'User deleted successfully.'
+                  )
+                  setShowDeleteModal(false)
+                  setUsers((prev) =>
+                    prev.filter((u) => u.id !== deletingUserId)
+                  )
+                } catch {
+                  showAlert('error', 'Error', 'Failed to delete user.')
+                } finally {
+                  setDeleting(false)
+                }
+              }}
+              className={`rounded px-4 py-2 text-white ${
+                deleting ? 'bg-gray-400' : 'bg-[#EB5757]'
+              }`}
+            >
+              {deleting ? 'Deleting...' : 'Delete'}
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(false)}
+              className="rounded bg-gray-300 px-4 py-2 text-gray-700 hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </ReusableModal>
+
+      {/* Create User Modal */}
       <ReusableModal
         isOpen={showCreateUserModal}
         onClose={() => setShowCreateUserModal(false)}
-        title="Create New User"
+        title="Create User"
       >
-        <div className="space-y-4 p-6">
-          {[
-            'firstName',
-            'lastName',
-            'email',
-            'phoneNumber',
-            'password',
-            'profileImg',
-          ].map((f) => (
-            <div key={f}>
-              <label className="mb-1 block text-sm font-medium text-gray-700 capitalize">
-                {f}
-              </label>
-              <input
-                type={f === 'password' ? 'password' : 'text'}
-                value={newUser[f as keyof typeof newUser]}
-                onChange={(e) =>
-                  setNewUser({ ...newUser, [f]: e.target.value })
-                }
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#C06A4D]"
-              />
-            </div>
-          ))}
-        </div>
-        <div className="flex justify-end border-t border-gray-200 px-6 py-4">
+        <div className="p-6 space-y-4">
+          <input
+            type="text"
+            placeholder="First Name"
+            value={newUser.firstName}
+            onChange={(e) =>
+              setNewUser({ ...newUser, firstName: e.target.value })
+            }
+            className="w-full rounded border border-gray-300 p-2"
+          />
+          <input
+            type="text"
+            placeholder="Last Name"
+            value={newUser.lastName}
+            onChange={(e) =>
+              setNewUser({ ...newUser, lastName: e.target.value })
+            }
+            className="w-full rounded border border-gray-300 p-2"
+          />
+          <input
+            type="email"
+            placeholder="Email"
+            value={newUser.email}
+            onChange={(e) =>
+              setNewUser({ ...newUser, email: e.target.value })
+            }
+            className="w-full rounded border border-gray-300 p-2"
+          />
+          <input
+            type="text"
+            placeholder="Phone Number"
+            value={newUser.phoneNumber}
+            onChange={(e) =>
+              setNewUser({ ...newUser, phoneNumber: e.target.value })
+            }
+            className="w-full rounded border border-gray-300 p-2"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={newUser.password}
+            onChange={(e) =>
+              setNewUser({ ...newUser, password: e.target.value })
+            }
+            className="w-full rounded border border-gray-300 p-2"
+          />
           <button
+            disabled={creatingUser}
             onClick={async () => {
-              if (!newUser.email || !newUser.firstName || !newUser.password) {
-                showAlert(
-                  'error',
-                  'Missing Fields',
-                  'Please fill all required fields.'
-                )
-                return
-              }
-              setCreatingUser(true)
               try {
+                setCreatingUser(true)
                 await registerUser({
-                  phoneNumber: newUser.phoneNumber,
-                  email: newUser.email.toLowerCase(),
-                  firstName: newUser.firstName,
-                  lastName: newUser.lastName,
-                  password: newUser.password,
+                  ...newUser,
                   role: 'user',
                   countryCode: 'NL',
-                  profileImg: newUser.profileImg,
                 })
                 showAlert(
                   'success',
-                  'User Created',
-                  `${newUser.email} registered successfully.`
+                  'Created',
+                  'User account created successfully.'
                 )
+                setShowCreateUserModal(false)
                 setNewUser({
                   firstName: '',
                   lastName: '',
                   email: '',
                   phoneNumber: '',
                   password: '',
-                  profileImg: '',
+                  profileImg: 'https://avatar.iran.liara.run/public/25',
                 })
-                setShowCreateUserModal(false)
-              } catch (err: any) {
-                const msg =
-                  err.response?.data?.message || 'Failed to create user.'
-                showAlert('error', 'Error', msg)
+              } catch {
+                showAlert('error', 'Error', 'Failed to create user.')
               } finally {
                 setCreatingUser(false)
               }
             }}
-            disabled={creatingUser}
-            className={`rounded px-6 py-2 font-semibold transition ${creatingUser ? 'cursor-not-allowed bg-gray-400' : 'bg-[#C06A4D] text-white hover:bg-[#a6533c]'}`}
-          >
-            {creatingUser ? (
-              <Circles
-                height="20"
-                width="20"
-                color="#fff"
-                ariaLabel="loading"
-                visible
-              />
-            ) : (
-              'Create User'
-            )}
-          </button>
-        </div>
-      </ReusableModal>
-
-      <ReusableModal
-        isOpen={showEditPasswordModal}
-        onClose={() => {
-          setShowEditPasswordModal(false)
-          setNewPassword('')
-          setSelectedUserId(null)
-        }}
-        title="Update User Password"
-      >
-        <div className="space-y-4 p-6">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              New Password
-            </label>
-            <input
-              type={'text'}
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-[#C06A4D]"
-            />
-          </div>
-        </div>
-
-        <div className="flex justify-end border-t border-gray-200 px-6 py-4">
-          <button
-            onClick={async () => {
-              if (!selectedUserId || !newPassword) {
-                showAlert(
-                  'error',
-                  'Missing Fields',
-                  'Please enter a new password.'
-                )
-                return
-              }
-              setPasswordLoading(true)
-              try {
-                await updateUserPassword(selectedUserId, newPassword)
-                showAlert(
-                  'success',
-                  'Password Updated',
-                  'User password updated successfully.'
-                )
-                setShowEditPasswordModal(false)
-                setNewPassword('')
-              } catch (err: any) {
-                showAlert(
-                  'error',
-                  'Error',
-                  err.response?.data?.message || 'Failed to update password.'
-                )
-              } finally {
-                setPasswordLoading(false)
-              }
-            }}
-            disabled={passwordLoading}
-            className={`rounded px-6 py-2 font-semibold transition ${
-              passwordLoading
-                ? 'cursor-not-allowed bg-gray-400'
-                : 'bg-[#C06A4D] text-white hover:bg-[#a6533c]'
+            className={`w-full rounded px-4 py-2 text-white ${
+              creatingUser ? 'bg-gray-400' : 'bg-[#C06A4D]'
             }`}
           >
-            {passwordLoading ? (
-              <Circles
-                height="20"
-                width="20"
-                color="#fff"
-                ariaLabel="loading"
-                visible
-              />
-            ) : (
-              'Update Password'
-            )}
-          </button>
-        </div>
-      </ReusableModal>
-
-      <ReusableModal
-        isOpen={showDeleteModal}
-        onClose={() => {
-          setShowDeleteModal(false)
-          setDeletingUserId(null)
-          setDeletingUserEmail(null)
-        }}
-        title="Confirm Delete"
-      >
-        <div className="space-y-4 p-6 text-center">
-          <p className="text-gray-700">
-            Are you sure you want to delete{' '}
-            <span className="font-semibold">{deletingUserEmail}</span>?<br />
-            This action cannot be undone.
-          </p>
-        </div>
-
-        <div className="flex justify-center gap-3 border-t border-gray-200 px-6 py-4">
-          <button
-            onClick={() => {
-              setShowDeleteModal(false)
-              setDeletingUserId(null)
-              setDeletingUserEmail(null)
-            }}
-            className="rounded bg-gray-300 px-6 py-2 font-semibold text-gray-800 transition hover:bg-gray-400"
-          >
-            Cancel
-          </button>
-
-          <button
-            onClick={async () => {
-              if (!deletingUserId) return
-              setDeleting(true)
-              try {
-                await deleteUser(deletingUserId)
-                showAlert(
-                  'success',
-                  'User Deleted',
-                  `${deletingUserEmail} has been removed.`
-                )
-                setUsers(users.filter((u) => u.id !== deletingUserId))
-                setShowDeleteModal(false)
-              } catch (err: any) {
-                showAlert(
-                  'error',
-                  'Error',
-                  err.response?.data?.message || 'Failed to delete user.'
-                )
-              } finally {
-                setDeleting(false)
-              }
-            }}
-            disabled={deleting}
-            className={`rounded px-6 py-2 font-semibold transition ${
-              deleting
-                ? 'cursor-not-allowed bg-gray-400'
-                : 'bg-[#EB5757] text-white hover:bg-red-700'
-            }`}
-          >
-            {deleting ? (
-              <Circles
-                height="20"
-                width="20"
-                color="#fff"
-                ariaLabel="loading"
-                visible
-              />
-            ) : (
-              'Delete'
-            )}
+            {creatingUser ? 'Creating...' : 'Create User'}
           </button>
         </div>
       </ReusableModal>
