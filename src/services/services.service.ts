@@ -128,3 +128,22 @@ export const updatePublishStatus = async (
     throw error
   }
 }
+
+
+
+
+interface GetEventsParams {
+  pageIndex: number
+  pageSize: number
+  eventType?: string
+  severity?: string
+  userId?: string
+  startDate?: string
+  endDate?: string
+}
+
+export const getEvents = async (params: GetEventsParams) => {
+  const response = await axiosExtended.get('/admin/tracking/events', { params })
+  // Expected response: { data: EventData[], total: number }
+  return response.data
+}
