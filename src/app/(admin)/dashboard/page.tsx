@@ -233,7 +233,8 @@ export default function EventsTable() {
                   events.map((ev) => (
                     <TableRow key={ev.id} className="">
                       <TableCell className="px-5 py-4">
-                        <Badge
+                        {}
+                        <Badge //@ts-ignore
   color={
     ev.severity === 'INFO'
       ? 'success'
@@ -303,7 +304,7 @@ export default function EventsTable() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell
+                    <TableCell //@ts-ignore
                       colSpan={6}
                       className="text-center py-10 text-gray-500"
                     >
