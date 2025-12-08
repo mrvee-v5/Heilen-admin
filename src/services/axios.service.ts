@@ -1,9 +1,8 @@
 import { useAuth } from '@/hooks/useAuth'
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 
-const prod = 'https://api.heilen.io'
-const dev = 'https://dev.heilen.io'
-const API_BASE_URL = prod;
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
 // Public endpoints that don't require authentication
 const authNotRequiredURLs: string[] = ['/admin/login']

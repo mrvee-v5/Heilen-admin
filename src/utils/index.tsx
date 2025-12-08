@@ -14,7 +14,7 @@ export const extractStringPoint = (point: string) => {
   } catch (err) {}
 }
 
-const GOOGLE_MAP_API_KEY = 'AIzaSyBkCYfaY4WVRce8IoefEvVhxoafQ7n2v6E'
+const GOOGLE_MAP_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY
 
 export const getLocationDetails = async (lat?: number, lng?: number) => {
   try {
