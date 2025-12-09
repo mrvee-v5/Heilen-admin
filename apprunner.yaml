@@ -1,0 +1,19 @@
+version: 1.0
+runtime: nodejs22
+
+build:
+  commands:
+    build:
+      - echo "🟢 Checking Node version..."
+      - node -v
+      - echo "🟢 Installing dependencies..."
+      - npm ci || npm install --include=dev
+      - echo "🟢 Building Vite app..."
+      - npm run build --verbose || (echo "❌ Build failed — showing folder contents:" && ls -R && cat /var/log/* || true)
+      - echo "🟢 Listing dist contents..."
+      - ls -la dist || echo "❌ dist folder not found!"
+
+run:
+  command: node server.js
+  network:
+    port: 8080
