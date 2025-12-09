@@ -7,13 +7,11 @@ build:
       - echo "🟢 Checking Node version..."
       - node -v
       - echo "🟢 Installing dependencies..."
-      - npm ci || npm install --include=dev
-      - echo "🟢 Building Vite app..."
-      - npm run build --verbose || (echo "❌ Build failed — showing folder contents:" && ls -R && cat /var/log/* || true)
-      - echo "🟢 Listing dist contents..."
-      - ls -la dist || echo "❌ dist folder not found!"
+      - npm ci || npm install
+      - echo "🟢 Building Next.js app..."
+      - npm run build
 
 run:
-  command: node server.js
+  command: npm start
   network:
     port: 8080
