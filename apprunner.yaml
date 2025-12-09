@@ -4,14 +4,12 @@ runtime: nodejs22
 build:
   commands:
     build:
-      - echo "🟢 Checking Node version..."
-      - node -v
       - echo "🟢 Installing dependencies..."
-      - npm ci || npm install
+      - yarn install --frozen-lockfile || yarn install
       - echo "🟢 Building Next.js app..."
-      - npm run build
+      - yarn build
 
 run:
-  command: npm start
+  command: yarn start -p 8080
   network:
     port: 8080
