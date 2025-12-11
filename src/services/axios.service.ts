@@ -4,10 +4,9 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
-// Public endpoints that don't require authentication
 const authNotRequiredURLs: string[] = ['/admin/login']
 
-// Check if request should skip auth
+
 const getExcludedURLs = (config: AxiosRequestConfig): boolean => {
   return (
     config.url !== undefined &&
