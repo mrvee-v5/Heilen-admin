@@ -3,10 +3,8 @@ import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
 
-// Public endpoints that don't require authentication
 const authNotRequiredURLs: string[] = ['/admin/login']
 
-// Check if request should skip auth
 const getExcludedURLs = (config: AxiosRequestConfig): boolean => {
   return (
     config.url !== undefined &&
@@ -14,21 +12,19 @@ const getExcludedURLs = (config: AxiosRequestConfig): boolean => {
   )
 }
 
-// Create axios instance
+
 const axiosExtended: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
 })
 
-// Add request interceptor
+
 axiosExtended.interceptors.request.use(
   async (config: any) => {
     // Add custom API key header
     config.headers['X-API-key'] = 'sheyyoudeywhinemeniiiiiiiiii'
 
-    // Skip auth if it's a public endpoint
     if (getExcludedURLs(config)) return config
 
-    // ✅ Pull token directly from Zustand store
     const token = useAuth.getState().token
 
     if (token) {
