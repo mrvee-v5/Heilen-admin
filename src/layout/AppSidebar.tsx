@@ -12,10 +12,12 @@ import {
   HorizontaLDots,
   ListIcon,
   PageIcon,
+  PaperPlaneIcon,
   PieChartIcon,
   PlugInIcon,
   TableIcon,
   UserCircleIcon,
+
 } from '../icons/index'
 
 type NavItem = {
@@ -48,6 +50,12 @@ const navItems: NavItem[] = [
     icon: <UserCircleIcon />,
     name: 'Services',
     path: '/dashboard/services',
+  },
+
+    {
+    icon: <BoxCubeIcon />,
+    name: 'Settings',
+    path: '/dashboard/discounts',
   },
 
   // {
