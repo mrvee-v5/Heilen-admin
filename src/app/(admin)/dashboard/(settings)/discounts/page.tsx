@@ -86,6 +86,7 @@ export default function DiscountCodesTable() {
   // CREATE
   // ==========================
   const handleCreate = async () => {
+    
     try {
       setCreating(true)
       await createDiscountCode(form)
@@ -154,7 +155,17 @@ export default function DiscountCodesTable() {
     <ComponentCard title="Discount Codes">
       <div className="flex justify-end mb-4">
         <button
-          onClick={() => setShowCreateModal(true)}
+          onClick={() =>{ 
+            setForm({
+              code: '',
+              discountPercent: '',
+              validFrom: '',
+              validUntil: '',
+              maxUses: 1,
+              isActive: false
+            })
+            setShowCreateModal(true)
+          }}
           className="rounded bg-[#54392A] px-4 py-2 text-white"
         >
           Create Discount Code
