@@ -1,7 +1,8 @@
+import { NEXT_API_BASE_URL } from '@/config/api'
 import { useAuth } from '@/hooks/useAuth'
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_ORIGIN
+const API_BASE_URL = NEXT_API_BASE_URL
 
 const authNotRequiredURLs: string[] = ['/admin/login']
 
