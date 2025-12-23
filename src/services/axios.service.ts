@@ -1,8 +1,8 @@
-import { NEXT_API_BASE_URL } from '@/config/api'
+import { BACKEDN_API_BASE_URL } from '@/config/api'
 import { useAuth } from '@/hooks/useAuth'
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 
-const API_BASE_URL = NEXT_API_BASE_URL
+const API_BASE_URL = BACKEDN_API_BASE_URL
 
 const authNotRequiredURLs: string[] = ['/admin/login']
 
